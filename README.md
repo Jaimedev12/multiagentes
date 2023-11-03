@@ -1,8 +1,8 @@
 # Multiagentes
 
-# Equipo 7 - Grafiteros
+## Equipo 7 - Grafiteros
 
-# Integrantes
+## Integrantes
 Carolina Nicole González Leal A01284948
 Michelle Bojórquez Gómez A00833416
 Jaime Eduardo López Castro A0033173
