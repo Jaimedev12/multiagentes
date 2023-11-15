@@ -40,15 +40,15 @@ class Robot(Agent):
                 continue
 
             visited[cur_pos] = True
-            vecinos = self.model.grid.get_neighbors(
-                cur_pos, moore=False, include_center=False)
+            neighbours = self.model.grid.get_neighbors(
+                cur_pos, moore=True, include_center=False)
         
-            for vecino in vecinos:
-                if is_target(vecino):
-                    return vecino
+            for agent in neighbours:
+                if is_target(agent):
+                    return agent
 
-                if is_valid(vecino):
-                    queue.append(vecino.pos)
+                if is_valid(agent):
+                    queue.append(agent.pos)
 
         # Si ya no hay suciedad
         return 0
@@ -72,7 +72,7 @@ class Robot(Agent):
             return
         
         if not isinstance(self.target_cell, Cell):
-            self.target_cell = self.find_closest_tile(is_target=lambda celda: isinstance(celda, Box), is_valid=lambda celda: isinstance(celda, Cell))
+            self.target_cell = self.find_closest_tile(is_target=lambda agent: isinstance(agent, Box), is_valid=lambda agent: isinstance(agent, Cell))
 
         self.move_to_target_cell(neighbours)
 
@@ -105,7 +105,7 @@ class Robot(Agent):
             return
 
         neighbours = self.model.grid.get_neighbors(
-            self.pos, moore=False, include_center=False)
+            self.pos, moore=True, include_center=False)
         
         # Marcar posiciones bloqueadas
         blocked_positions = set()
