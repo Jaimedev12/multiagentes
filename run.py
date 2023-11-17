@@ -1,4 +1,4 @@
-from server import server
+from visualization import visualization
 # import server as server
 
-server.launch(open_browser=True)
+visualization.launch(open_browser=True)
