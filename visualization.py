@@ -40,24 +40,6 @@ def agent_portrayal(agent):
 grid = mesa.visualization.CanvasGrid(
     agent_portrayal, 20, 20, 400, 400)
 
-# chart_celdas = mesa.visualization.ChartModule(
-#     [{"Label": "CeldasSucias", "Color": '#36A2EB', "label": "Celdas Sucias"}],
-#     50, 200,
-#     data_collector_name="datacollector"
-# )
-
-# chart_movimientos = mesa.visualization.ChartModule(
-#     [{"Label": "Movimientos", "Color": '#36A2EB', "label": "Total de Movimientos"}],
-#     50, 200, 
-#     data_collector_name="datacollector"
-# )
-
-# chart_recargas = mesa.visualization.ChartModule(
-#     [{"Label": "Recargas", "Color": '#36A2EB', "label": "Total de Recargas"}],
-#     50, 200, 
-#     data_collector_name="datacollector"
-# )
-
 
 model_params = {
     "num_robots": mesa.visualization.Slider(
@@ -68,22 +50,6 @@ model_params = {
         1,
         description="Escoge cuántos robots deseas implementar en el modelo",
     ),
-    # "porc_celdas_sucias": mesa.visualization.Slider(
-    #     "Porcentaje de Celdas Sucias",
-    #     0.3,
-    #     0.0,
-    #     0.75,
-    #     0.05,
-    #     description="Selecciona el porcentaje de celdas sucias",
-    # ),
-    # "porc_muebles": mesa.visualization.Slider(
-    #     "Porcentaje de Muebles",
-    #     0.1,
-    #     0.0,
-    #     0.20,
-    #     0.01,
-    #     description="Selecciona el porcentaje de muebles",
-    # ),
     "modo_pos_inicial": mesa.visualization.Choice(
         "Posición Inicial de los Robots",
         "Aleatoria",
@@ -94,7 +60,7 @@ model_params = {
     "N": 20,
 }
 
-server = mesa.visualization.ModularServer(
+visualization = mesa.visualization.ModularServer(
     Room, [grid],
-    "Reto Grafiteros", model_params, 8521
+    "Reto Grafiteros", model_params, 8522
 )
