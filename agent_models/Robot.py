@@ -4,6 +4,10 @@ from collections import deque
 from agent_models.Cell import Cell
 from agent_models.Box import Box
 
+from response_format.ActionType import ActionType
+from response_format.AgentAction import AgentAction
+from response_format.GridPosition import GridPosition
+
 class Robot(Agent):
 
     max_charge = 100
@@ -17,6 +21,8 @@ class Robot(Agent):
         self.target_cell = None
         self.current_path_visited_dict = dict()
         self.is_charging = False
+        self.cur_action_type = None
+        self.cur_agent_action = None
 
         # Estadísticas
         self.movements = 0
@@ -155,7 +161,17 @@ class Robot(Agent):
             #self.sig_pos = estacion_carga_mas_cercana.pos
             self.necesita_carga = True  # Necesita llegar a la estación de carga
    
+    def get_action(self) -> AgentAction:
+
+        if self.pos != self.sig_pos:
+            self.cur_action_type = ActionType.MOVE
+
+        return AgentAction(_from=GridPosition(self.pos[0], self.pos[1]), _to=GridPosition(self.sig_pos[0], self.sig_pos[1]), _type=self.cur_action_type)
+
     def advance(self):
+
+        self.cur_agent_action = self.get_action()
+        
         if self.pos != self.sig_pos:
             self.free_pos(self.pos)
             self.movements += 1  
