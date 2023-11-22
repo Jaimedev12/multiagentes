@@ -6,6 +6,8 @@ from mesa.datacollection import DataCollector
 from agent_models.Cell import Cell
 from agent_models.Box import Box
 from agent_models.Robot import Robot
+from agent_models.ChargingStation import ChargingStation
+from agent_models.Shelf import Shelf
 
 class Room(Model):
     def __init__(self, M: int = 20, N: int = 20,
@@ -30,9 +32,22 @@ class Room(Model):
 
         # Posicionamiento de la caja
         box_position = (N//2, M//2)
-        box = Box(1234562341, self)
+        box = Box(1, self)
         self.grid.place_agent(box, box_position)
         available_positions.remove(box_position)
+
+        # Posicionamiento de la estación de carga
+        charge_station_position = (0, 0)
+        charge_station = ChargingStation(2, self)
+        self.grid.place_agent(charge_station, charge_station_position)
+        available_positions.remove(charge_station_position)
+
+        # Posicionando los estantes
+        for i in range(8, 12, 2):
+            shelf_position = (0, i+1)
+            shelf = Shelf("3"+str(i), self)
+            self.grid.place_agent(shelf, shelf_position)
+            available_positions.remove(shelf_position)
 
         # Posicionamiento de agentes robot
         if modo_pos_inicial == 'Aleatoria':
@@ -54,12 +69,10 @@ class Room(Model):
         return self.current_id
 
     def step(self):
-
         agents_needing_charge = get_agents_needing_charge(self)
         boxes_to_store = get_boxes_to_store(self)
         boxes_to_ship = get_boxes_to_ship(self)
 
-        print("Boxes to store: ", len(boxes_to_store))
 
         self.datacollector.collect(self)
         self.schedule.step()

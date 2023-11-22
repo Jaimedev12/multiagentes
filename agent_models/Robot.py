@@ -163,8 +163,9 @@ class Robot(Agent):
             self.necesita_carga = True  # Necesita llegar a la estación de carga
    
     def get_action(self) -> AgentAction:
+        self.cur_action_type = None
 
-        if self.pos != self.sig_pos:
+        if self.cur_action_type == None:
             self.cur_action_type = ActionType.MOVE
 
         return AgentAction(_from=GridPosition(self.pos[0], self.pos[1]), _to=GridPosition(self.sig_pos[0], self.sig_pos[1]), _type=self.cur_action_type)
