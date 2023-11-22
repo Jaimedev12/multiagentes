@@ -23,6 +23,7 @@ class Robot(Agent):
         self.is_charging = False
         self.cur_action_type = None
         self.cur_agent_action = None
+        self.has_target_cell = False
 
         # Estadísticas
         self.movements = 0

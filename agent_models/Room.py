@@ -54,6 +54,13 @@ class Room(Model):
         return self.current_id
 
     def step(self):
+
+        agents_needing_charge = get_agents_needing_charge(self)
+        boxes_to_store = get_boxes_to_store(self)
+        boxes_to_ship = get_boxes_to_ship(self)
+
+        print("Boxes to store: ", len(boxes_to_store))
+
         self.datacollector.collect(self)
         self.schedule.step()
 
@@ -67,4 +74,35 @@ def get_agent_actions(model: Model) -> list:
                 obj.cur_agent_action = None
     
     return agent_actions
+
+def get_agents_needing_charge(model: Model) -> list:
+    agents_needing_charge = list()
+    for cell in model.grid.coord_iter():
+        cell_content, pos = cell
+        for obj in cell_content:
+            if isinstance(obj, Robot) and obj.cur_charge <= 40 and obj.has_target_cell == False:
+                agents_needing_charge.append(obj)
+    
+    return agents_needing_charge
+
+def get_boxes_to_store(model: Model) -> list:
+    boxes_to_store = list()
+    for cell in model.grid.coord_iter():
+        cell_content, pos = cell
+        for obj in cell_content:
+            if isinstance(obj, Box) and obj.is_stored == False and obj.is_being_carried == False and obj.is_apartada == False:
+                boxes_to_store.append(obj)
+    
+    return boxes_to_store
+
+def get_boxes_to_ship(model: Model) -> list:
+    boxes_to_ship = list()
+    for cell in model.grid.coord_iter():
+        cell_content, pos = cell
+        for obj in cell_content:
+            if isinstance(obj, Box) and obj.is_stored == True == False and obj.is_apartada == False:
+                boxes_to_ship.append(obj)
+    
+    return boxes_to_ship
+
 
