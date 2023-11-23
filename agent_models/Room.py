@@ -64,10 +64,6 @@ class Room(Model):
             model_reporters={"AgentActions": get_agent_actions},
         )
 
-    def next_id(self):
-        self.current_id += 1
-        return self.current_id
-
     def step(self):
         agents_needing_charge = get_agents_needing_charge(self)
         boxes_to_store = get_boxes_to_store(self)
