@@ -9,6 +9,8 @@ from agent_models.Robot import Robot
 from agent_models.ChargingStation import ChargingStation
 from agent_models.Shelf import Shelf
 
+from collections import deque
+
 class Room(Model):
     def __init__(self, M: int = 20, N: int = 20,
                  num_robots: int = 1,
@@ -65,13 +67,82 @@ class Room(Model):
         )
 
     def step(self):
-        agents_needing_charge = get_agents_needing_charge(self)
-        boxes_to_store = get_boxes_to_store(self)
-        boxes_to_ship = get_boxes_to_ship(self)
+        robots_needing_charge = get_robots_needing_charge(self)
+        # boxes_to_store = get_boxes_to_store(self)
+        # boxes_to_ship = get_boxes_to_ship(self)
+
+        for robot in robots_needing_charge:
+
+            def when_arrives_at_charging_station(robot: Robot):
+                robot.is_charging = True
+
+            if assign_charge_station(robot, when_arrives_at_charging_station, self) == False:
+                continue
+
+            def when_arrive_at_resting_place(robot: Robot):
+                robot.target_position = None
+                robot.dont_move()
+
+            assign_resting_place(robot, when_arrive_at_resting_place, self) # Para que no se quede en la estación de carga
+
+        # for box in boxes_to_store:
+        #     robot = find_closest_robot(box, self)
+        #     assign_box_to_robot(robot, box, self)
+        #     assign_shelf_to_robot(robot, self)
+
+        # for box in boxes_to_ship:
+        #     robot = find_closest_robot(box, self)
+        #     assign_box_to_robot(robot, box, self)
+        #     assign_shelf_to_robot(robot, self)
 
 
         self.datacollector.collect(self)
         self.schedule.step()
+
+def assign_shelf_to_robot(robot: Robot, model: Model):
+    ...
+
+def assign_box_to_robot(robot: Robot, box: Box, model: Model):
+    ...
+
+def find_closest_robot(box: Box, model: Model) -> Robot:
+    ...
+
+
+
+def assign_charge_station(robot: Robot, action, model: Model):
+    closest_charging_station_pos = find_closest_tile(robot, 
+            start_pos=robot.pos,
+            is_target=lambda agent: isinstance(agent, ChargingStation) and agent.is_apartada == False, 
+            is_valid=lambda agent: isinstance(agent, Cell), 
+            model=model)
+
+    if closest_charging_station_pos == 0:
+        return False
+    
+    robot.objectives_assigned.append((closest_charging_station_pos, action))
+
+    agents_in_pos = model.grid.get_cell_list_contents([closest_charging_station_pos])
+    charging_stations = list(filter(lambda agent: isinstance(agent, ChargingStation), agents_in_pos))
+    for station in charging_stations: # Solo debería haber uno
+        station.is_apartada = True
+
+    return True
+
+def assign_resting_place(robot: Robot, action, model: Model):
+    closest_valid_pos = find_closest_tile(robot, 
+            start_pos=robot.objectives_assigned[0][0],
+            is_target=lambda agent: isinstance(agent, Cell) and agent.is_apartada == False, 
+            is_valid=lambda agent: isinstance(agent, Cell), 
+            model=model)
+
+    if closest_valid_pos == 0:
+        raise Exception("No hay celdas disponibles, error inesperado")
+
+    robot.objectives_assigned.append((closest_valid_pos, action))
+    return True
+
+
 
 def get_agent_actions(model: Model) -> list:
     agent_actions = list()
@@ -84,15 +155,15 @@ def get_agent_actions(model: Model) -> list:
     
     return agent_actions
 
-def get_agents_needing_charge(model: Model) -> list:
-    agents_needing_charge = list()
+def get_robots_needing_charge(model: Model) -> list:
+    robots_needing_charge = list()
     for cell in model.grid.coord_iter():
         cell_content, pos = cell
         for obj in cell_content:
-            if isinstance(obj, Robot) and obj.cur_charge <= 40 and obj.has_target_cell == False:
-                agents_needing_charge.append(obj)
+            if isinstance(obj, Robot) and obj.cur_charge <= 40 and len(obj.objectives_assigned) == 0:
+                robots_needing_charge.append(obj)
     
-    return agents_needing_charge
+    return robots_needing_charge
 
 def get_boxes_to_store(model: Model) -> list:
     boxes_to_store = list()
@@ -109,9 +180,33 @@ def get_boxes_to_ship(model: Model) -> list:
     for cell in model.grid.coord_iter():
         cell_content, pos = cell
         for obj in cell_content:
-            if isinstance(obj, Box) and obj.is_stored == True == False and obj.is_apartada == False:
+            if isinstance(obj, Box) and obj.is_stored == True and obj.is_apartada == False:
                 boxes_to_ship.append(obj)
     
     return boxes_to_ship
 
+
+def find_closest_tile(self, start_pos, is_target, is_valid, model: Model):
+    queue = deque()
+    queue.append(start_pos)
+    visited = dict()
+
+    while queue:
+        cur_pos = queue.popleft()
+
+        if cur_pos in visited:
+            continue
+
+        visited[cur_pos] = True
+        neighbors = model.grid.get_neighbors(
+            cur_pos, moore=True, include_center=False)
+
+        for agent in neighbors:
+            if is_target(agent):
+                return agent.pos
+
+            if is_valid(agent):
+                queue.append(agent.pos)
+
+    return 0
 

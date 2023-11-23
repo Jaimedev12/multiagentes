@@ -3,6 +3,7 @@ from collections import deque
 
 from agent_models.Cell import Cell
 from agent_models.Box import Box
+from agent_models.ChargingStation import ChargingStation
 
 from response_format.ActionType import ActionType
 from response_format.AgentAction import AgentAction
@@ -12,7 +13,6 @@ class Robot(Agent):
 
     max_charge = 100
     charge_rate = 25
-    charge_limit = 40
 
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
@@ -27,14 +27,13 @@ class Robot(Agent):
         self.is_charging = False
         self.cur_action_type = None
         self.cur_agent_action = None
-        self.has_target_cell = False
 
         # Estadísticas
         self.movements = 0
         self.num_recharges = 0
 
-    # def calc_dist(self, p1, p2):
-    #     return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
+    def calc_dist(self, p1, p2):
+        return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
 
     def dont_move(self):
         self.sig_pos = self.pos
@@ -51,10 +50,10 @@ class Robot(Agent):
     #             continue
 
     #         visited[cur_pos] = True
-    #         neighbours = self.model.grid.get_neighbors(
+    #         neighbors = self.model.grid.get_neighbors(
     #             cur_pos, moore=True, include_center=False)
         
-    #         for agent in neighbours:
+    #         for agent in neighbors:
     #             if is_target(agent):
     #                 return agent
 
@@ -63,37 +62,37 @@ class Robot(Agent):
 
     #     return 0
 
-    def get_neighbours_by_distance(self, neighbours, posicion_destino):
+    def order_neighbors_by_distance(self, neighbors, posicion_destino):
         distances = []
-        for pos in neighbours:
+        for pos in neighbors:
             pos_with_distance = (self.calc_dist(pos, posicion_destino), pos)
             distances.append(pos_with_distance)
 
         distances.sort(key=lambda x: x[0])
 
-        for i in range(len(neighbours)):
-            neighbours[i] = distances[i][1]
+        for i in range(len(neighbors)):
+            neighbors[i] = distances[i][1]
 
-        return neighbours
+        return neighbors
     
-    # def move_to_new_pos(self, neighbours):
-    #     if len(neighbours) == 0:
+    # def move_to_new_pos(self, neighbors):
+    #     if len(neighbors) == 0:
     #         self.dont_move()
     #         return
         
     #     if not isinstance(self.target_position, Cell):
     #         self.target_position = self.find_closest_tile(is_target=lambda agent: isinstance(agent, Box), is_valid=lambda agent: isinstance(agent, Cell))
 
-    #     self.move_to_target_cell(neighbours)
+    #     self.move_to_target_cell(neighbors)
 
-    # def move_to_target_cell(self, neighbours):
+    # def move_to_target_cell(self, neighbors):
     #     if self.target_position == 0:
     #         self.dont_move()
     #         return
 
-    #     neighbours_with_priority = self.get_neighbours_by_distance(neighbours, self.target_position.pos)
-    #     if len(neighbours_with_priority) > 0:
-    #         self.sig_pos = neighbours_with_priority[0].pos
+    #     neighbors_with_priority = self.order_neighbors_by_distance(neighbors, self.target_position.pos)
+    #     if len(neighbors_with_priority) > 0:
+    #         self.sig_pos = neighbors_with_priority[0].pos
     #     else:
     #         self.dont_move()
 
@@ -116,43 +115,53 @@ class Robot(Agent):
             self.is_charging = False
             self.num_recharges += 1
 
-    def get_valid_neighbours(self):
-        neighbour_agents = self.model.grid.get_neighbors(
+            agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
+            charging_stations = list(filter(lambda agent: isinstance(agent, ChargingStation), agents_in_pos))
+            for station in charging_stations: # Solo debería haber uno
+                station.is_apartada = False
+
+    def get_valid_neighbors(self):
+        neighbor_agents = self.model.grid.get_neighbors(
             self.pos, moore=True, include_center=False)
         
         # Marcar posiciones bloqueadas
         blocked_positions = set()
-        for cell in neighbour_agents:
+        for cell in neighbor_agents:
             if (isinstance(cell, (Robot))
                or (cell.pos in self.current_path_visited_dict) # Ya se visitó en el recorrido actual
                or (isinstance(cell, Cell) and cell.is_apartada)): # Ya está apartada la celda                
                 blocked_positions.add(cell.pos)
 
-        neighbour_positions = self.model.grid.get_neighborhood(
+        neighbor_positions = self.model.grid.get_neighborhood(
             self.pos, moore=True, include_center=False)
 
         # Quitar todos los agentes de las posiciones bloqueadas
-        allowed_positions = [pos for pos in neighbour_positions if pos not in blocked_positions]
+        allowed_positions = [pos for pos in neighbor_positions if pos not in blocked_positions]
         return allowed_positions
 
     def move_to_target_position(self):
-        allowed_positions = self.get_valid_neighbours()
+        allowed_positions = self.get_valid_neighbors()
 
         if len(allowed_positions) == 0:
             self.dont_move()
             return
         
-        neighbours_by_distance = self.get_neighbours_by_distance(allowed_positions, self.target_position)
-        self.sig_pos = neighbours_by_distance[0]
+        neighbors_by_distance = self.order_neighbors_by_distance(allowed_positions, self.target_position)
+        self.sig_pos = neighbors_by_distance[0]
         self.apartar_pos(self.sig_pos)
 
 
     def step(self):
+        # print("objetivos: ", len(self.objectives_assigned))
+        # print("objetivo actual: ", self.current_objective)
+        # print("is charging: ", self.is_charging)
+        # print("target position: ", self.target_position)
+
         if self.cur_charge == 0:
             self.dont_move()
             return
         
-        if self.is_charging and self.cur_charge < self.charge_limit:
+        if self.is_charging and self.cur_charge < self.max_charge:
             self.charge()
             self.dont_move()
             return
@@ -166,19 +175,19 @@ class Robot(Agent):
         
         if self.pos == self.objectives_assigned[self.current_objective][0]:
             # Ejecuta la acción del objetivo
-            self.objectives_assigned[self.current_objective][1]()
+            self.objectives_assigned[self.current_objective][1](self)
 
             self.current_objective += 1
             self.dont_move()
             return
         
-        if self.target_position == None and len(self.objectives_assigned) > 0:
+        if len(self.objectives_assigned) > 0:
             self.target_position = self.objectives_assigned[self.current_objective][0]
 
         self.move_to_target_position()
 
 
-    # def move_to_charge_station(self, neighbours):
+    # def move_to_charge_station(self, neighbors):
 
     #     if self.is_charging:
     #         self.cur_charge = min(self.cur_charge+self.charge_rate, self.max_charge)
@@ -189,7 +198,7 @@ class Robot(Agent):
     #             self.num_recharges += 1
     #             print("sumó recargas")
     #             print(self.num_recharges)
-    #             self.move_to_new_pos(neighbours)
+    #             self.move_to_new_pos(neighbors)
     #             # self.target_position = None  # No hay objetivo actual
     #         else:
     #             self.dont_move()
@@ -203,7 +212,7 @@ class Robot(Agent):
     #         self.dont_move()
     #     else:
     #         self.target_position = estacion_carga_mas_cercana
-    #         self.move_to_target_cell(neighbours)
+    #         self.move_to_target_cell(neighbors)
     #         #self.sig_pos = estacion_carga_mas_cercana.pos
     #         self.necesita_carga = True  # Necesita llegar a la estación de carga
    
@@ -217,13 +226,11 @@ class Robot(Agent):
         return AgentAction(_from=GridPosition(self.pos[0], self.pos[1]), _to=GridPosition(self.sig_pos[0], self.sig_pos[1]), _type=self.cur_action_type)
 
     def advance(self):
-
         self.cur_agent_action = self.get_action()
         
         if self.pos != self.sig_pos:
             self.free_pos(self.pos)
             self.movements += 1  
             self.cur_charge -= 1  
-            # self.cur_charge = max(self.cur_charge, 0)
 
         self.model.grid.move_agent(self, self.sig_pos)

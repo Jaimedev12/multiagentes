@@ -25,6 +25,8 @@ def agent_portrayal(agent):
         portrayal = {"Shape": "rect", "Filled": "true", "Layer": 0, "w": 0.9, "h": 0.9, "text_color": "Black"}
         portrayal["Color"] = "white"
         portrayal["text"] = ""
+        if agent.is_apartada:
+            portrayal["Color"] = "red"
         return portrayal
     elif isinstance(agent, ChargingStation):
         portrayal = {"Shape": "rect", "Filled": "true", "Layer": 1, "w": 0.9, "h": 0.9, 
@@ -43,7 +45,7 @@ grid = mesa.visualization.CanvasGrid(
 model_params = {
     "num_robots": mesa.visualization.Slider(
         "Número de Robots",
-        5,
+        1,
         1,
         MAX_NUMBER_ROBOTS,
         1,
