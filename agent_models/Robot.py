@@ -42,30 +42,6 @@ class Robot(Agent):
     def dont_move(self):
         self.sig_pos = self.pos
 
-    # def find_closest_tile(self, is_target, is_valid):
-    #     queue = deque()
-    #     queue.append(self.pos)
-    #     visited = dict()
-
-    #     while queue:
-    #         cur_pos = queue.popleft()
-
-    #         if cur_pos in visited:
-    #             continue
-
-    #         visited[cur_pos] = True
-    #         neighbors = self.model.grid.get_neighbors(
-    #             cur_pos, moore=True, include_center=False)
-        
-    #         for agent in neighbors:
-    #             if is_target(agent):
-    #                 return agent
-
-    #             if is_valid(agent):
-    #                 queue.append(agent.pos)
-
-    #     return 0
-
     def order_neighbors_by_distance(self, neighbors, posicion_destino):
         distances = []
         for pos in neighbors:
@@ -78,27 +54,6 @@ class Robot(Agent):
             neighbors[i] = distances[i][1]
 
         return neighbors
-    
-    # def move_to_new_pos(self, neighbors):
-    #     if len(neighbors) == 0:
-    #         self.dont_move()
-    #         return
-        
-    #     if not isinstance(self.target_position, Cell):
-    #         self.target_position = self.find_closest_tile(is_target=lambda agent: isinstance(agent, Box), is_valid=lambda agent: isinstance(agent, Cell))
-
-    #     self.move_to_target_cell(neighbors)
-
-    # def move_to_target_cell(self, neighbors):
-    #     if self.target_position == 0:
-    #         self.dont_move()
-    #         return
-
-    #     neighbors_with_priority = self.order_neighbors_by_distance(neighbors, self.target_position.pos)
-    #     if len(neighbors_with_priority) > 0:
-    #         self.sig_pos = neighbors_with_priority[0].pos
-    #     else:
-    #         self.dont_move()
 
     def apartar_pos(self, pos):
         agentes_en_pos = self.model.grid.get_cell_list_contents([pos])
@@ -123,6 +78,7 @@ class Robot(Agent):
         agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
         shelf = list(filter(lambda agent: isinstance(agent, Shelf), agents_in_pos))[0]
         shelf.is_occupied = True
+        shelf.is_apartado = False
 
     def charge(self):
         self.cur_charge = min(self.cur_charge+self.charge_rate, self.max_charge)
