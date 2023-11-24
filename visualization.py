@@ -13,8 +13,16 @@ MAX_NUMBER_ROBOTS = 20
 
 def agent_portrayal(agent):
     if isinstance(agent, Robot):
-        return {"Shape": "circle", "Filled": "false", "Color": "black", "Layer": 1, "r": 1.0,
-                "text": f"{agent.cur_charge}", "text_color": "yellow"}
+        portrayal = {"Shape": "circle", "Filled": "false", "Color": "black", "Layer": 1, "r": 1.0,
+                "text": f"{agent.cur_charge}", "text_color": "white"}
+        if agent.cur_charge <= 0:
+            portrayal["Color"] = "red"
+        elif agent.cur_charge <= 40:
+            portrayal["Color"] = "orange"
+        elif agent.is_lifting_box:
+            portrayal["Color"] = "blue"
+        
+        return portrayal
     # elif isinstance(agent, Mueble):
     #     return {"Shape": "rect", "Filled": "true", "Color": "white", "Layer": 0,
     #             "w": 0.9, "h": 0.9, "text_color": "Black", "text": "🪑"}
@@ -35,6 +43,8 @@ def agent_portrayal(agent):
     elif isinstance(agent, Shelf):
         portrayal = {"Shape": "rect", "Filled": "true", "Layer": 1, "w": 0.9, "h": 0.9, 
                      "Color": "white", "text_color": "Black", "text": "🪑"}
+        if agent.is_occupied:
+            portrayal["Color"] = "blue"
         return portrayal
 
 

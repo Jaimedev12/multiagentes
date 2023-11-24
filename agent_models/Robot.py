@@ -4,6 +4,7 @@ from collections import deque
 from agent_models.Cell import Cell
 from agent_models.Box import Box
 from agent_models.ChargingStation import ChargingStation
+from agent_models.Shelf import Shelf
 
 from response_format.ActionType import ActionType
 from response_format.AgentAction import AgentAction
@@ -25,6 +26,9 @@ class Robot(Agent):
 
         self.current_path_visited_dict = dict()
         self.is_charging = False
+        self.is_lifting_box = False
+
+        # Response variables
         self.cur_action_type = None
         self.cur_agent_action = None
 
@@ -107,6 +111,18 @@ class Robot(Agent):
         celda_en_pos = filter(lambda agente : isinstance(agente, Cell), agentes_en_pos)
         for celda in celda_en_pos:
             celda.is_apartada = False
+
+    def lift_box(self):
+        self.is_lifting_box = True
+        agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
+        box_to_remove = list(filter(lambda agent: isinstance(agent, Box), agents_in_pos))[0]
+        self.model.remove_agent(box_to_remove)
+
+    def store_box(self):
+        self.is_lifting_box = False
+        agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
+        shelf = list(filter(lambda agent: isinstance(agent, Shelf), agents_in_pos))[0]
+        shelf.is_occupied = True
 
     def charge(self):
         self.cur_charge = min(self.cur_charge+self.charge_rate, self.max_charge)
@@ -232,5 +248,7 @@ class Robot(Agent):
             self.free_pos(self.pos)
             self.movements += 1  
             self.cur_charge -= 1  
+        else :
+            self.cur_charge -= 1
 
         self.model.grid.move_agent(self, self.sig_pos)
