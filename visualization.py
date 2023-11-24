@@ -10,6 +10,8 @@ from agent_models.ChargingStation import ChargingStation
 from agent_models.Shelf import Shelf
 
 MAX_NUMBER_ROBOTS = 20
+MAX_NUMBER_IN_BOXES_PER_MINUTE = 60
+MAX_NUMBER_OUT_BOXES_PER_MINUTE = 60
 
 def agent_portrayal(agent):
     if isinstance(agent, Robot):
@@ -26,7 +28,7 @@ def agent_portrayal(agent):
     
     elif isinstance(agent, Box):
         portrayal = {"Shape": "rect", "Filled": "true", "Layer": 2, "Color": "white",
-                "w": 0.45, "h": 0.45, "text_color": "Black", "text": "📦"}
+                "w": 0.5, "h": 0.5, "text_color": "Black", "text": "📦"}
         if agent.is_apartada:
             portrayal["Color"] = "red"
         return portrayal
@@ -74,6 +76,22 @@ model_params = {
         "Aleatoria",
         ["Fija", "Aleatoria"],
         "Selecciona la forma se posicionan los robots"
+    ),
+    "in_boxes_per_minute": mesa.visualization.Slider(
+        "Número de cajas que entran por minuto",
+        1,
+        1,
+        MAX_NUMBER_IN_BOXES_PER_MINUTE,
+        1,
+        description="Escoge cuántas cajas entran por minuto",
+    ),
+    "out_boxes_per_minute": mesa.visualization.Slider(
+        "Número de cajas que salen por minuto",
+        1,
+        1,
+        MAX_NUMBER_OUT_BOXES_PER_MINUTE,
+        1,
+        description="Escoge cuántas cajas salen por minuto",
     ),
     "M": 20,
     "N": 20,

@@ -82,6 +82,7 @@ class Robot(Agent):
 
     def charge(self):
         self.cur_charge = min(self.cur_charge+self.charge_rate, self.max_charge)
+        self.cur_action_type = ActionType.CHARGE
 
         if self.cur_charge == self.max_charge:
             self.is_charging = False
@@ -100,8 +101,9 @@ class Robot(Agent):
         blocked_positions = set()
         for cell in neighbor_agents:
             if (isinstance(cell, (Robot))
-               or (cell.pos in self.current_path_visited_dict) # Ya se visitó en el recorrido actual
-               or (isinstance(cell, Cell) and cell.is_apartada)): # Ya está apartada la celda                
+                    or (cell.pos in self.current_path_visited_dict) # Ya se visitó en el recorrido actual
+                    or (isinstance(cell, Cell) and cell.is_apartada) # Ya está apartada la celda
+                    or (self.is_lifting_box and isinstance(cell, Shelf) and cell.is_occupied)): # No se puede pasar por un estante ocupado mientras se carga una caja           
                 blocked_positions.add(cell.pos)
 
         neighbor_positions = self.model.grid.get_neighborhood(

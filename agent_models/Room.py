@@ -1,3 +1,5 @@
+import random
+
 from mesa.model import Model
 from mesa.space import MultiGrid
 from mesa.time import SimultaneousActivation
@@ -16,12 +18,16 @@ class Room(Model):
     def __init__(self, M: int = 20, N: int = 20,
                  num_robots: int = 1,
                  modo_pos_inicial: str = 'Aleatoria',
+                 in_boxes_per_minute: int = 1,
+                 out_boxes_per_minute: int = 1
                  ):
 
         super().__init__()
         self.current_id = 0
 
         self.num_robots = num_robots
+        self.in_boxes_per_minute = in_boxes_per_minute
+        self.out_boxes_per_minute = out_boxes_per_minute
 
         self.grid = MultiGrid(M, N, False)
         self.schedule = SimultaneousActivation(self)
@@ -74,8 +80,18 @@ class Room(Model):
         assign_actions_to_robots_needing_charge(self)
         assign_robots_to_boxes_needing_storage(self)
 
+        current_step = self.schedule.steps
+        if current_step % (60//self.in_boxes_per_minute) == 0:
+            instantiate_box(self)
+
         self.datacollector.collect(self)
         self.schedule.step()
+
+def instantiate_box(model: Model):
+    box_position = (random.randint(5, 15), random.randint(5, 15))
+    uuid = model.schedule.steps
+    box = Box(uuid*2, model)
+    model.grid.place_agent(box, box_position)
 
 def assign_robots_to_boxes_needing_storage(model: Model):
     boxes_to_store = get_boxes_to_store(model)
@@ -85,12 +101,9 @@ def assign_robots_to_boxes_needing_storage(model: Model):
 
     for box in boxes_to_store:
         closest_robot = get_closest_robot(box, model)
-    
         if closest_robot == 0: 
             print("No se encontró robot")
             continue
-
-        print("Robot en pos: ", closest_robot.pos)
 
         if assign_box_to_robot(box, closest_robot, model) == False: 
             print("No se pudo asignar caja a robot")
@@ -99,6 +112,7 @@ def assign_robots_to_boxes_needing_storage(model: Model):
         
         if assign_shelf_to_robot(closest_robot, model) == False: 
             print("No se pudo asignar estante a robot")
+            box.is_apartada = False
             closest_robot.objectives_assigned = list()
             continue
 
