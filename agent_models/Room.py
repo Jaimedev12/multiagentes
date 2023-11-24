@@ -11,8 +11,13 @@ from agent_models.Robot import Robot
 from agent_models.ChargingStation import ChargingStation
 from agent_models.Shelf import Shelf
 from agent_models.ConveyorBelt import ConveyorBelt
+from agent_models.ShippingShelf import ShippingShelf
 
 from collections import deque
+
+from step_actions.utils import find_closest_agent, move_out_of_the_way
+from step_actions.assign_actions_to_robots_needing_charge import assign_actions_to_robots_needing_charge
+from step_actions.assign_robots_to_boxes_needing_storage import assign_robots_to_boxes_needing_storage
 
 class Room(Model):
     def __init__(self, M: int = 20, N: int = 20,
@@ -28,6 +33,8 @@ class Room(Model):
         self.num_robots = num_robots
         self.in_boxes_per_minute = in_boxes_per_minute
         self.out_boxes_per_minute = out_boxes_per_minute
+        
+        self.out_boxes_needed = 0
 
         self.grid = MultiGrid(M, N, False)
         self.schedule = SimultaneousActivation(self)
@@ -39,22 +46,28 @@ class Room(Model):
             cell = Cell(int(f"{num_robots}{id}") + 1, self)
             self.grid.place_agent(cell, pos)
 
-        # Posicionamiento de la caja
-        box_position = (N//2, M//2)
-        box = Box(1, self)
-        self.grid.place_agent(box, box_position)
-        available_positions.remove(box_position)
-
         # Posicionamiento de la estación de carga
         charge_station_position = (0, 0)
-        charge_station = ChargingStation(2, self)
+        charge_station = ChargingStation(20, self)
+        self.grid.place_agent(charge_station, charge_station_position)
+        available_positions.remove(charge_station_position)
+
+        charge_station_position = (0, 19)
+        charge_station = ChargingStation(21, self)
         self.grid.place_agent(charge_station, charge_station_position)
         available_positions.remove(charge_station_position)
 
         # Posicionando los estantes
-        for i in range(8, 12, 2):
+        for i in range(4, 15, 2):
             shelf_position = (0, i+1)
             shelf = Shelf("3"+str(i), self)
+            self.grid.place_agent(shelf, shelf_position)
+            available_positions.remove(shelf_position)
+
+        # Posicionando los estantes de salida
+        for i in range(5, 15, 8):
+            shelf_position = (19, i+1)
+            shelf = ShippingShelf("4"+str(i), self)
             self.grid.place_agent(shelf, shelf_position)
             available_positions.remove(shelf_position)
 
@@ -79,6 +92,7 @@ class Room(Model):
     def step(self):
         assign_actions_to_robots_needing_charge(self)
         assign_robots_to_boxes_needing_storage(self)
+        # fullfill_shipping_orders(self)
 
         current_step = self.schedule.steps
         if current_step % (60//self.in_boxes_per_minute) == 0:
@@ -93,123 +107,54 @@ def instantiate_box(model: Model):
     box = Box(uuid*2, model)
     model.grid.place_agent(box, box_position)
 
-def assign_robots_to_boxes_needing_storage(model: Model):
-    boxes_to_store = get_boxes_to_store(model)
 
-    # for box in boxes_to_store:
-    #     print("Caja en pos: ", box.pos)
+def fullfill_shipping_orders(model: Model):
+    update_shipping_orders(model)
+    if model.out_boxes_needed == 0:
+        return
+    
+    for i in range(0, model.out_boxes_needed):
+        (shipping_shelf, occupied_shelf) = find_closest_ShippingShelf_OccupiedShelf_pair(model)
+        closest_robot = find_closest_robot_from_shelf(occupied_shelf, model)
 
-    for box in boxes_to_store:
-        closest_robot = get_closest_robot(box, model)
-        if closest_robot == 0: 
-            print("No se encontró robot")
-            continue
-
-        if assign_box_to_robot(box, closest_robot, model) == False: 
-            print("No se pudo asignar caja a robot")
-            closest_robot.objectives_assigned = list()
-            continue
+        if assign_occupied_shelf_to_robot(occupied_shelf, closest_robot, model) == False:
+            print("No se pudo asignar estante ocupado a robot")
+            break
         
-        if assign_shelf_to_robot(closest_robot, model) == False: 
-            print("No se pudo asignar estante a robot")
-            box.is_apartada = False
-            closest_robot.objectives_assigned = list()
-            continue
+        if assign_shipping_shelf_to_robot(shipping_shelf, closest_robot, model) == False:
+            print("No se pudo asignar estante de salida a robot")
+            break
 
-        if move_out_of_the_way(closest_robot, model) == False: 
-            print("No se pudo mover robot")
-            closest_robot.objectives_assigned = list()
-            continue
+def assign_shipping_shelf_to_robot(shipping_shelf: ShippingShelf, robot: Robot, model: Model):
+    ...
 
-def assign_actions_to_robots_needing_charge(model: Model):
-    robots_needing_charge = get_robots_needing_charge(model)
-    for robot in robots_needing_charge:
-        if assign_charge_station(robot, model) == False:
-            print("No se pudo asignar estación de carga")
-            robot.objectives_assigned = list()
-            continue
+def assign_occupied_shelf_to_robot(occupied_shelf: Shelf, robot: Robot, model: Model):
+    ...
 
-        if move_out_of_the_way(robot, model) == False:
-            print("No se pudo mover robot")
-            robot.objectives_assigned = list()
-            continue
+def find_closest_robot_from_shelf(shelf: Shelf, model: Model):
+    ...    
 
-def assign_shelf_to_robot(robot: Robot, model: Model):
-    closest_shelf = find_closest_agent(
-        start_pos=robot.pos,
-        is_target=lambda agent: isinstance(agent, Shelf) and agent.is_apartado == False and agent.is_occupied == False,
-        is_not_valid=lambda agent: isinstance(agent, Robot) or 
-                                   (isinstance(agent, Shelf) and agent.is_occupied) or
-                                   isinstance(agent, ChargingStation) or 
-                                   isinstance(agent, ConveyorBelt),
-        model=model
-        )
-    
-    if closest_shelf == 0:
-        return False
-    
-    closest_shelf.is_apartado = True
-    robot.objectives_assigned.append((closest_shelf.pos, lambda robot: robot.store_box()))
+def find_closest_ShippingShelf_OccupiedShelf_pair(model: Model):
+    shipping_shelves = get_shipping_shelves(model)
+    occupied_shelves = get_occupied_shelves(model)
 
-def assign_box_to_robot(box: Box, robot: Robot, model: Model) -> bool:    
-    box.is_apartada = True
-    robot.objectives_assigned.append((box.pos, lambda robot: robot.lift_box()))
+    closest_pair = (0, 0)
+    closest_distance = 10000
 
-    return True
+    for shipping_shelf in shipping_shelves:
+        for occupied_shelf in occupied_shelves:
+            distance = model.grid.get_distance(shipping_shelf.pos, occupied_shelf.pos)
+            if distance < closest_distance:
+                closest_pair = (shipping_shelf, occupied_shelf)
+                closest_distance = distance
 
-def get_closest_robot(box: Box, model: Model):
-    closest_robot = find_closest_agent(
-        start_pos=box.pos,
-        is_target=lambda agent: isinstance(agent, Robot) and len(agent.objectives_assigned) == 0,
-        is_not_valid=lambda agent: isinstance(agent, ChargingStation) or 
-                                   isinstance(agent, ConveyorBelt),
-        model=model
-        )
-
-    return closest_robot
+    return closest_pair
 
 
-
-def assign_charge_station(robot: Robot, model: Model):
-    closest_charging_station = find_closest_agent( 
-            start_pos=robot.pos,
-            is_target=lambda agent: isinstance(agent, ChargingStation) and agent.is_apartada == False, 
-            is_not_valid=lambda agent: isinstance(agent, Robot) or 
-                                       isinstance(agent, ConveyorBelt),
-            model=model)
-
-    if closest_charging_station == 0:
-        return False
-    
-    def when_arrives(robot: Robot):
-        robot.is_charging = True
-
-    robot.objectives_assigned.append((closest_charging_station.pos, when_arrives))
-
-    closest_charging_station.is_apartada = True
-
-    return True
-
-def move_out_of_the_way(robot: Robot, model: Model):
-    closest_valid_cell = find_closest_agent(
-            start_pos=robot.objectives_assigned[len(robot.objectives_assigned)-1][0],
-            is_target=lambda agent: isinstance(agent, Cell) and agent.is_apartada == False,
-            is_not_valid=lambda agent: isinstance(agent, Robot) or 
-                                       isinstance(agent, ChargingStation) or 
-                                       isinstance(agent, ConveyorBelt),
-            model=model)
-
-    if closest_valid_cell == 0:
-        return False
-
-    def when_arrives(robot: Robot):
-        robot.target_position = None
-        robot.dont_move()
-
-    robot.objectives_assigned.append((closest_valid_cell.pos, when_arrives))
-    return True
-
-
+def update_shipping_orders(model: Model):
+    current_step = model.schedule.steps
+    if current_step % (60//model.out_boxes_per_minute) == 0:
+        model.out_boxes_needed += 1
 
 def get_agent_actions(model: Model) -> list:
     agent_actions = list()
@@ -222,63 +167,24 @@ def get_agent_actions(model: Model) -> list:
     
     return agent_actions
 
-def get_robots_needing_charge(model: Model) -> list:
-    robots_needing_charge = list()
+
+def get_occupied_shelves(model: Model) -> list:
+    occupied_shelves = list()
     for cell in model.grid.coord_iter():
         cell_content, pos = cell
         for obj in cell_content:
-            if isinstance(obj, Robot) and obj.cur_charge <= 40 and len(obj.objectives_assigned) == 0:
-                robots_needing_charge.append(obj)
+            if isinstance(obj, Shelf) and obj.is_occupied == True:
+                occupied_shelves.append(obj)
     
-    return robots_needing_charge
+    return occupied_shelves
 
-def get_boxes_to_store(model: Model) -> list:
-    boxes_to_store = list()
+def get_shipping_shelves(model: Model) -> list:
+    shipping_shelves = list()
     for cell in model.grid.coord_iter():
         cell_content, pos = cell
         for obj in cell_content:
-            if isinstance(obj, Box) and obj.is_stored == False and obj.is_being_carried == False and obj.is_apartada == False:
-                boxes_to_store.append(obj)
+            if isinstance(obj, ShippingShelf):
+                shipping_shelves.append(obj)
     
-    return boxes_to_store
-
-def get_boxes_to_ship(model: Model) -> list:
-    boxes_to_ship = list()
-    for cell in model.grid.coord_iter():
-        cell_content, pos = cell
-        for obj in cell_content:
-            if isinstance(obj, Box) and obj.is_stored == True and obj.is_apartada == False:
-                boxes_to_ship.append(obj)
-    
-    return boxes_to_ship
-
-
-def find_closest_agent(start_pos, is_target, is_not_valid, model: Model):
-    queue = deque()
-    queue.append(start_pos)
-    visited = dict()
-
-    while queue:
-        cur_pos = queue.popleft()
-
-        if cur_pos in visited:
-            continue
-
-        visited[cur_pos] = True
-
-        neighbor_positions = model.grid.get_neighborhood(
-            cur_pos, moore=True, include_center=False)
-        
-        for pos in neighbor_positions:
-            agents = model.grid.get_cell_list_contents([pos])
-            for agent in agents:                
-                if is_not_valid(agent):
-                    break
-
-                if is_target(agent):
-                    return agent
-                
-                queue.append(agent.pos)
-
-    return 0
+    return shipping_shelves
 

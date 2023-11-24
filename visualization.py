@@ -8,6 +8,7 @@ from agent_models.Robot import Robot
 from agent_models.Room import Room
 from agent_models.ChargingStation import ChargingStation
 from agent_models.Shelf import Shelf
+from agent_models.ShippingShelf import ShippingShelf
 
 MAX_NUMBER_ROBOTS = 20
 MAX_NUMBER_IN_BOXES_PER_MINUTE = 60
@@ -30,6 +31,13 @@ def agent_portrayal(agent):
         portrayal = {"Shape": "rect", "Filled": "true", "Layer": 2, "Color": "white",
                 "w": 0.5, "h": 0.5, "text_color": "Black", "text": "📦"}
         if agent.is_apartada:
+            portrayal["Color"] = "red"
+        return portrayal
+    
+    elif isinstance(agent, ShippingShelf):
+        portrayal = {"Shape": "rect", "Filled": "true", "Layer": 1, "w": 0.9, "h": 0.9, 
+                     "Color": "white", "text_color": "Black", "text": "⬆️"}
+        if agent.is_apartado:
             portrayal["Color"] = "red"
         return portrayal
         
