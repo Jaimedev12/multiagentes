@@ -21,22 +21,18 @@ def assign_robots_to_boxes_needing_storage(model: Model):
     for box in boxes_to_store:
         closest_robot = get_closest_robot(box, model)
         if closest_robot == 0: 
-            print("No se encontró robot")
             continue
 
-        if assign_box_to_robot(box, closest_robot, model) == False: 
-            print("No se pudo asignar caja a robot")
+        if assign_box_to_robot(box, closest_robot, model) == False:
             closest_robot.objectives_assigned = list()
             continue
         
-        if assign_shelf_to_robot(closest_robot, model) == False: 
-            print("No se pudo asignar estante a robot")
+        if assign_shelf_to_robot(closest_robot, model) == False:
             box.is_apartada = False
             closest_robot.objectives_assigned = list()
             continue
 
-        if move_out_of_the_way(closest_robot, model) == False: 
-            print("No se pudo mover robot")
+        if move_out_of_the_way(closest_robot, model) == False:
             closest_robot.objectives_assigned = list()
             continue
 

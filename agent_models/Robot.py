@@ -162,6 +162,7 @@ class Robot(Agent):
             self.objectives_assigned[self.current_objective][1](self)
 
             self.current_objective += 1
+            self.current_path_visited_dict = dict()
             self.dont_move()
             return
         
@@ -169,37 +170,6 @@ class Robot(Agent):
             self.target_position = self.objectives_assigned[self.current_objective][0]
 
         self.move_to_target_position()
-
-
-    # def move_to_charge_station(self, neighbors):
-
-    #     if self.is_charging:
-    #         self.cur_charge = min(self.cur_charge+self.charge_rate, self.max_charge)
-
-    #         # Comprobar si ya está completamente cargado
-    #         if self.cur_charge >= self.max_charge:
-    #             self.is_charging = False
-    #             self.num_recharges += 1
-    #             print("sumó recargas")
-    #             print(self.num_recharges)
-    #             self.move_to_new_pos(neighbors)
-    #             # self.target_position = None  # No hay objetivo actual
-    #         else:
-    #             self.dont_move()
-
-    #         return
-        
-    #     estacion_carga_mas_cercana = self.find_closest_tile(is_target=lambda celda: isinstance(celda, Cell) and celda.es_estacion_carga, is_valid=lambda celda: isinstance(celda, Cell))
-
-    #     if estacion_carga_mas_cercana.pos == self.pos:
-    #         self.is_charging = True
-    #         self.dont_move()
-    #     else:
-    #         self.target_position = estacion_carga_mas_cercana
-    #         self.move_to_target_cell(neighbors)
-    #         #self.sig_pos = estacion_carga_mas_cercana.pos
-    #         self.necesita_carga = True  # Necesita llegar a la estación de carga
-   
 
     def get_action(self) -> AgentAction:
         self.cur_action_type = None
@@ -214,10 +184,11 @@ class Robot(Agent):
         
         if self.pos != self.sig_pos:
             self.free_pos(self.pos)
+            self.current_path_visited_dict[self.pos] = True
             self.movements += 1  
             self.cur_charge -= 1  
         # else :
-        #     self.cur_charge -= 0.1
+            # self.cur_charge -= 0.1
         
         self.cur_charge = max(self.cur_charge, 0)
 

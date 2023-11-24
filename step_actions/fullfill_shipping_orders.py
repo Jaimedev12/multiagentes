@@ -17,36 +17,28 @@ from .utils import get_distance, find_closest_agent, move_out_of_the_way
 
 def fullfill_shipping_orders(model: Model):
     update_shipping_orders(model)
-    # print("Out boxes needed: ", model.out_boxes_needed)
     if model.out_boxes_needed == 0:
         return
     
     for i in range(0, model.out_boxes_needed):
         (shipping_shelf, occupied_shelf) = find_closest_ShippingShelf_OccupiedShelf_pair(model)
         if shipping_shelf == 0 or occupied_shelf == 0:
-            print("No se pudo encontrar un par de estantes")
             break
 
-        # print("shipping_shelf: ", shipping_shelf)
-        # print("occupied_shelf: ", occupied_shelf)
 
         closest_robot = find_closest_robot_from_shelf(occupied_shelf, model)
         if closest_robot == 0:
-            print("No se pudo encontrar robot")
             break
 
         if assign_occupied_shelf_to_robot(occupied_shelf, closest_robot, model) == False:
-            print("No se pudo asignar estante ocupado a robot")
             break
         
         if assign_shipping_shelf_to_robot(shipping_shelf, closest_robot, model) == False:
-            print("No se pudo asignar estante de salida a robot")
             closest_robot.objectives_assigned = list()
             occupied_shelf.is_apartado = False
             break
 
         if move_out_of_the_way(closest_robot, model) == False:
-            print("No se pudo mover robot")
             closest_robot.objectives_assigned = list()
             occupied_shelf.is_apartado = False
             break

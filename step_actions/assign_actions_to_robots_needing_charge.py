@@ -19,12 +19,10 @@ def assign_actions_to_robots_needing_charge(model: Model):
     robots_needing_charge = get_robots_needing_charge(model)
     for robot in robots_needing_charge:
         if assign_charge_station(robot, model) == False:
-            print("No se pudo asignar estación de carga")
             robot.objectives_assigned = list()
             continue
 
         if move_out_of_the_way(robot, model) == False:
-            print("No se pudo mover robot")
             robot.objectives_assigned = list()
             continue
 
