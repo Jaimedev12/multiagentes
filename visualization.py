@@ -14,13 +14,15 @@ MAX_NUMBER_ROBOTS = 20
 MAX_NUMBER_IN_BOXES_PER_MINUTE = 60
 MAX_NUMBER_OUT_BOXES_PER_MINUTE = 60
 
+MIN_CHARGE = 60
+
 def agent_portrayal(agent):
     if isinstance(agent, Robot):
         portrayal = {"Shape": "circle", "Filled": "false", "Color": "black", "Layer": 1, "r": 1.0,
                 "text": f"{agent.cur_charge}", "text_color": "white"}
         if agent.cur_charge <= 0:
             portrayal["Color"] = "red"
-        elif agent.cur_charge <= 40:
+        elif agent.cur_charge <= MIN_CHARGE:
             portrayal["Color"] = "orange"
         elif agent.is_lifting_box:
             portrayal["Color"] = "blue"
@@ -107,5 +109,5 @@ model_params = {
 
 visualization = mesa.visualization.ModularServer(
     Room, [grid],
-    "Reto Grafiteros", model_params, 8522
+    "Reto Grafiteros", model_params, 8521
 )

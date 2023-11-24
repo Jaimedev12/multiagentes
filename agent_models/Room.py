@@ -18,6 +18,7 @@ from collections import deque
 from step_actions.utils import find_closest_agent, move_out_of_the_way
 from step_actions.assign_actions_to_robots_needing_charge import assign_actions_to_robots_needing_charge
 from step_actions.assign_robots_to_boxes_needing_storage import assign_robots_to_boxes_needing_storage
+from step_actions.fullfill_shipping_orders import fullfill_shipping_orders
 
 class Room(Model):
     def __init__(self, M: int = 20, N: int = 20,
@@ -92,7 +93,7 @@ class Room(Model):
     def step(self):
         assign_actions_to_robots_needing_charge(self)
         assign_robots_to_boxes_needing_storage(self)
-        # fullfill_shipping_orders(self)
+        fullfill_shipping_orders(self)
 
         current_step = self.schedule.steps
         if current_step % (60//self.in_boxes_per_minute) == 0:
@@ -107,55 +108,6 @@ def instantiate_box(model: Model):
     box = Box(uuid*2, model)
     model.grid.place_agent(box, box_position)
 
-
-def fullfill_shipping_orders(model: Model):
-    update_shipping_orders(model)
-    if model.out_boxes_needed == 0:
-        return
-    
-    for i in range(0, model.out_boxes_needed):
-        (shipping_shelf, occupied_shelf) = find_closest_ShippingShelf_OccupiedShelf_pair(model)
-        closest_robot = find_closest_robot_from_shelf(occupied_shelf, model)
-
-        if assign_occupied_shelf_to_robot(occupied_shelf, closest_robot, model) == False:
-            print("No se pudo asignar estante ocupado a robot")
-            break
-        
-        if assign_shipping_shelf_to_robot(shipping_shelf, closest_robot, model) == False:
-            print("No se pudo asignar estante de salida a robot")
-            break
-
-def assign_shipping_shelf_to_robot(shipping_shelf: ShippingShelf, robot: Robot, model: Model):
-    ...
-
-def assign_occupied_shelf_to_robot(occupied_shelf: Shelf, robot: Robot, model: Model):
-    ...
-
-def find_closest_robot_from_shelf(shelf: Shelf, model: Model):
-    ...    
-
-def find_closest_ShippingShelf_OccupiedShelf_pair(model: Model):
-    shipping_shelves = get_shipping_shelves(model)
-    occupied_shelves = get_occupied_shelves(model)
-
-    closest_pair = (0, 0)
-    closest_distance = 10000
-
-    for shipping_shelf in shipping_shelves:
-        for occupied_shelf in occupied_shelves:
-            distance = model.grid.get_distance(shipping_shelf.pos, occupied_shelf.pos)
-            if distance < closest_distance:
-                closest_pair = (shipping_shelf, occupied_shelf)
-                closest_distance = distance
-
-    return closest_pair
-
-
-def update_shipping_orders(model: Model):
-    current_step = model.schedule.steps
-    if current_step % (60//model.out_boxes_per_minute) == 0:
-        model.out_boxes_needed += 1
-
 def get_agent_actions(model: Model) -> list:
     agent_actions = list()
     for cell in model.grid.coord_iter():
@@ -166,25 +118,4 @@ def get_agent_actions(model: Model) -> list:
                 obj.cur_agent_action = None
     
     return agent_actions
-
-
-def get_occupied_shelves(model: Model) -> list:
-    occupied_shelves = list()
-    for cell in model.grid.coord_iter():
-        cell_content, pos = cell
-        for obj in cell_content:
-            if isinstance(obj, Shelf) and obj.is_occupied == True:
-                occupied_shelves.append(obj)
-    
-    return occupied_shelves
-
-def get_shipping_shelves(model: Model) -> list:
-    shipping_shelves = list()
-    for cell in model.grid.coord_iter():
-        cell_content, pos = cell
-        for obj in cell_content:
-            if isinstance(obj, ShippingShelf):
-                shipping_shelves.append(obj)
-    
-    return shipping_shelves
 

@@ -29,11 +29,13 @@ def assign_actions_to_robots_needing_charge(model: Model):
             continue
 
 def get_robots_needing_charge(model: Model) -> list:
+
+    min_charge_allowed = 60
     robots_needing_charge = list()
     for cell in model.grid.coord_iter():
         cell_content, pos = cell
         for obj in cell_content:
-            if isinstance(obj, Robot) and obj.cur_charge <= 40 and len(obj.objectives_assigned) == 0:
+            if isinstance(obj, Robot) and obj.cur_charge <= min_charge_allowed and len(obj.objectives_assigned) == 0:
                 robots_needing_charge.append(obj)
     
     return robots_needing_charge
@@ -55,6 +57,6 @@ def assign_charge_station(robot: Robot, model: Model):
 
     robot.objectives_assigned.append((closest_charging_station.pos, when_arrives))
 
-    closest_charging_station.is_apartada = True
+    #closest_charging_station.is_apartada = True
 
     return True

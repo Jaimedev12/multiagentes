@@ -80,6 +80,16 @@ class Robot(Agent):
         shelf.is_occupied = True
         shelf.is_apartado = False
 
+    def take_box_from_storage(self):
+        self.is_lifting_box = True
+        agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
+        shelf = list(filter(lambda agent: isinstance(agent, Shelf), agents_in_pos))[0]
+        shelf.is_occupied = False
+        shelf.is_apartado = False
+
+    def ship_box(self):
+        self.is_lifting_box = False
+
     def charge(self):
         self.cur_charge = min(self.cur_charge+self.charge_rate, self.max_charge)
         self.cur_action_type = ActionType.CHARGE
@@ -131,7 +141,7 @@ class Robot(Agent):
         # print("is charging: ", self.is_charging)
         # print("target position: ", self.target_position)
 
-        if self.cur_charge == 0:
+        if self.cur_charge <= 0:
             self.dont_move()
             return
         
@@ -206,7 +216,9 @@ class Robot(Agent):
             self.free_pos(self.pos)
             self.movements += 1  
             self.cur_charge -= 1  
-        else :
-            self.cur_charge -= 1
+        # else :
+        #     self.cur_charge -= 0.1
+        
+        self.cur_charge = max(self.cur_charge, 0)
 
         self.model.grid.move_agent(self, self.sig_pos)

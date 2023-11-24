@@ -63,3 +63,6 @@ def move_out_of_the_way(robot: Robot, model: Model):
 
     robot.objectives_assigned.append((closest_valid_cell.pos, when_arrives))
     return True
+
+def get_distance(pos1, pos2):
+    return abs(pos1[0]-pos2[0]) + abs(pos1[1]-pos2[1])
