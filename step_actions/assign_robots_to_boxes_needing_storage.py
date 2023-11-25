@@ -60,7 +60,7 @@ def get_closest_robot(box: Box, model: Model):
 
 def assign_box_to_robot(box: Box, robot: Robot, model: Model) -> bool:    
     box.is_apartada = True
-    robot.objectives_assigned.append((box.pos, lambda robot: robot.lift_box()))
+    robot.objectives_assigned.append((box.pos, lambda robot: robot.pick_box_from_collection_shelf()))
 
     return True
 

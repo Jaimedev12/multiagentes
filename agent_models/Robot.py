@@ -68,7 +68,7 @@ class Robot(Agent):
         for celda in celda_en_pos:
             celda.is_apartada = False
 
-    def lift_box(self):
+    def pick_box_from_collection_shelf(self):
         self.is_lifting_box = True
         self.cur_action_type = ActionType.PICK
         agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])

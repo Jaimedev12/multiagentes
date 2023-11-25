@@ -107,22 +107,12 @@ class Room(Model):
 
     def step(self):
         spawn_box(self)
+        fullfill_shipping_orders(self)
         assign_robots_to_boxes_needing_storage(self)
         assign_actions_to_robots_needing_charge(self)
-        fullfill_shipping_orders(self)
-
-        # current_step = self.schedule.steps
-        # if current_step % (60//self.in_boxes_per_minute) == 0:
-        #     instantiate_box(self)
-
+        
         self.datacollector.collect(self)
         self.schedule.step()
-
-# def instantiate_box(model: Model):
-#     box_position = (random.randint(5, 15), random.randint(5, 15))
-#     uuid = model.schedule.steps
-#     box = Box(uuid*2, model)
-#     model.grid.place_agent(box, box_position)
 
 def get_agent_actions(model: Model) -> list:
     agent_actions = list()

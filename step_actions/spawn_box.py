@@ -20,7 +20,7 @@ def spawn_box(model: Model):
         print('No hay posiciones disponibles para spawnear una caja')
         return
 
-    instantiate_box(model, available_positions[0])
+    instantiate_box(model, available_positions[random.randint(0, len(available_positions)-1)])
 
 def get_available_spawning_positions(model: Model):
     available_positions = list()
