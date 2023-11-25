@@ -9,6 +9,7 @@ app = Flask(__name__)
 GRID_SIZE = 20
 NUMBER_ROBOTS = 1
 simulation_array = list()
+robot_positions = list()
 
 @app.route('/hello-world', methods=['GET'])
 def hello():
@@ -27,7 +28,7 @@ def start_visualization():
 def start_simulation():
     global simulation_array
     try:
-        simulation = Simulation(GRID_SIZE, GRID_SIZE, NUMBER_ROBOTS, 'Aleatoria', 50)
+        simulation = Simulation(GRID_SIZE, GRID_SIZE, NUMBER_ROBOTS, 'Fija', 50, robot_positions)
         simulation.execute_simulation()
         simulation_array = simulation.simulation_actions
         return "Simulation started!"
@@ -44,6 +45,19 @@ def get_simulation_step(index):
     except Exception as e:
         print(e)
         response = make_response(jsonify({"msg": "Error when trying to get the simulation step"}), 500)
+        return response
+    
+@app.route('/set_positions', methods=['POST'])
+def set_positions():
+    global robot_positions
+    try:
+        data = request.get_json()
+        # print(data["positions"])
+        robot_positions = data["positions"]
+        return "Positions received and processed successfully!"
+    except Exception as e:
+        print(e)
+        response = make_response(jsonify({"error": "Failed to process positions"}), 500)
         return response
 
 if __name__ == '__main__':

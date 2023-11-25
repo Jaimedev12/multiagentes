@@ -24,17 +24,21 @@ from step_actions.spawn_box import spawn_box
 class Room(Model):
     def __init__(self, M: int = 20, N: int = 20,
                  num_robots: int = 1,
-                 modo_pos_inicial: str = 'Aleatoria',
+                 modo_pos_inicial: str = '',
                  in_boxes_per_minute: int = 1,
-                 out_boxes_per_minute: int = 1
+                 out_boxes_per_minute: int = 1,
+                 robot_positions: list = list()
                  ):
 
         super().__init__()
         self.current_id = 0
 
-        self.num_robots = num_robots
+        print("Lista entregada: ", robot_positions)
+
+        self.num_robots = len(robot_positions) if len(robot_positions) > 0 else num_robots
         self.in_boxes_per_minute = in_boxes_per_minute
         self.out_boxes_per_minute = out_boxes_per_minute
+        self.robot_positions = robot_positions
         
         self.out_boxes_needed = 0
 
@@ -45,7 +49,7 @@ class Room(Model):
 
         # Posicionamiento de celdas
         for id, pos in enumerate(available_positions):
-            cell = Cell(int(f"{num_robots}{id}") + 1, self)
+            cell = Cell(int(f"{1234573125}{id}") + 1, self)
             self.grid.place_agent(cell, pos)
 
         # Posicionamiento de la estación de carga
@@ -89,13 +93,13 @@ class Room(Model):
 
         # Posicionamiento de agentes robot
         if modo_pos_inicial == 'Aleatoria':
-            start_pos_robots = self.random.sample(available_positions, k=num_robots)
-        else:  # 'Fija'
-            start_pos_robots = [(1, 1)] * num_robots
+            self.robot_positions = self.random.sample(available_positions, k=self.num_robots)
 
-        for id in range(num_robots):
+        print("Posiciones de los robots: ", self.robot_positions)
+
+        for id in range(self.num_robots):
             robot = Robot(id, self)
-            self.grid.place_agent(robot, start_pos_robots[id])
+            self.grid.place_agent(robot, self.robot_positions[id])
             self.schedule.add(robot)
 
         self.datacollector = DataCollector(
