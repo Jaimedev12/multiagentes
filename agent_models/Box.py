@@ -17,17 +17,15 @@ class Box(Agent):
         self.is_ready_to_pick_up = False
 
         self.cur_action_type = None
+        self.cur_agent_action = None
     
-
     def step(self):
         conveyor_belt = self.get_conveyor_belt()
         if conveyor_belt == 0: 
-            print("No está en una cinta transportadora")
             self.dont_move()
             return
         
         if self.is_box_in_next_pos(conveyor_belt):
-            print("Hay una caja en la siguiente posición")
             self.dont_move()
             return
 
@@ -40,11 +38,13 @@ class Box(Agent):
             return
         
     def advance(self):
-        self.get_action()
+        self.cur_agent_action = self.get_action()
         self.model.grid.move_agent(self, self.sig_pos)
 
     def get_action(self):
         self.cur_action_type = ActionType.MOVE
+        return AgentAction(_from=GridPosition(self.pos[0], self.pos[1]), _to=GridPosition(self.sig_pos[0], self.sig_pos[1]), _type=self.cur_action_type)
+
 
     def dont_move(self):
         self.sig_pos = self.pos

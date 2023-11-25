@@ -33,8 +33,6 @@ class Room(Model):
         super().__init__()
         self.current_id = 0
 
-        print("Lista entregada: ", robot_positions)
-
         self.num_robots = len(robot_positions) if len(robot_positions) > 0 else num_robots
         self.in_boxes_per_minute = in_boxes_per_minute
         self.out_boxes_per_minute = out_boxes_per_minute
@@ -95,8 +93,6 @@ class Room(Model):
         if modo_pos_inicial == 'Aleatoria':
             self.robot_positions = self.random.sample(available_positions, k=self.num_robots)
 
-        print("Posiciones de los robots: ", self.robot_positions)
-
         for id in range(self.num_robots):
             robot = Robot(id, self)
             self.grid.place_agent(robot, self.robot_positions[id])
@@ -124,6 +120,10 @@ def get_agent_actions(model: Model) -> list:
         cell_content, pos = cell
         for obj in cell_content:
             if isinstance(obj, Robot) and obj.cur_agent_action != None:
+                agent_actions.append(obj.cur_agent_action)
+                obj.cur_agent_action = None
+
+            if isinstance(obj, Box) and obj.cur_agent_action != None:
                 agent_actions.append(obj.cur_agent_action)
                 obj.cur_agent_action = None
     
