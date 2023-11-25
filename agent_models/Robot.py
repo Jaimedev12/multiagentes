@@ -70,6 +70,7 @@ class Robot(Agent):
 
     def lift_box(self):
         self.is_lifting_box = True
+        self.cur_action_type = ActionType.PICK
         agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
         box_to_remove = list(filter(lambda agent: isinstance(agent, Box), agents_in_pos))[0]
         self.model.remove_agent(box_to_remove)
@@ -77,6 +78,7 @@ class Robot(Agent):
 
     def store_box(self):
         self.is_lifting_box = False
+        self.cur_action_type = ActionType.DROP
         agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
         shelf = list(filter(lambda agent: isinstance(agent, Shelf), agents_in_pos))[0]
         shelf.is_occupied = True
@@ -84,6 +86,7 @@ class Robot(Agent):
 
     def take_box_from_storage(self):
         self.is_lifting_box = True
+        self.cur_action_type = ActionType.PICK
         agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
         shelf = list(filter(lambda agent: isinstance(agent, Shelf), agents_in_pos))[0]
         shelf.is_occupied = False
@@ -91,6 +94,7 @@ class Robot(Agent):
 
     def ship_box(self):
         self.is_lifting_box = False
+        self.cur_action_type = ActionType.DROP
         self.model.out_boxes_needed -= 1
 
     def charge(self):
@@ -177,8 +181,6 @@ class Robot(Agent):
         self.move_to_target_position()
 
     def get_action(self) -> AgentAction:
-        self.cur_action_type = None
-
         if self.cur_action_type == None:
             self.cur_action_type = ActionType.MOVE
 
@@ -186,6 +188,7 @@ class Robot(Agent):
 
     def advance(self):
         self.cur_agent_action = self.get_action()
+        self.cur_action_type = None
         
         if self.pos != self.sig_pos:
             self.free_pos(self.pos)
