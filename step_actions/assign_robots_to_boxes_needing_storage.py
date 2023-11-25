@@ -42,7 +42,7 @@ def get_boxes_to_store(model: Model) -> list:
     for cell in model.grid.coord_iter():
         cell_content, pos = cell
         for obj in cell_content:
-            if isinstance(obj, Box) and obj.is_apartada == False:
+            if isinstance(obj, Box) and obj.is_ready_to_pick_up and not obj.is_apartada:
                 boxes_to_store.append(obj)
     
     return boxes_to_store
@@ -66,10 +66,10 @@ def assign_box_to_robot(box: Box, robot: Robot, model: Model) -> bool:
 
 def assign_shelf_to_robot(robot: Robot, model: Model):
     closest_shelf = find_closest_agent(
-        start_pos=robot.pos,
-        is_target=lambda agent: isinstance(agent, Shelf) and agent.is_apartado == False and agent.is_occupied == False,
+        start_pos=robot.objectives_assigned[len(robot.objectives_assigned)-1][0],
+        is_target=lambda agent: isinstance(agent, Shelf) and agent.is_apartado == False and agent.is_occupied == False and agent.is_storage,
         is_not_valid=lambda agent: isinstance(agent, Robot) or 
-                                   (isinstance(agent, Shelf) and agent.is_occupied) or
+                                   (isinstance(agent, Shelf) and agent.is_occupied and not agent.is_storage) or
                                    isinstance(agent, ChargingStation) or 
                                    isinstance(agent, ConveyorBelt),
         model=model

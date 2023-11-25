@@ -93,7 +93,7 @@ def get_occupied_shelves(model: Model) -> list:
     for cell in model.grid.coord_iter():
         cell_content, pos = cell
         for obj in cell_content:
-            if isinstance(obj, Shelf) and obj.is_occupied == True and obj.is_apartado == False:
+            if isinstance(obj, Shelf) and obj.is_occupied == True and obj.is_apartado == False and obj.is_storage:
                 occupied_shelves.append(obj)
     
     return occupied_shelves

@@ -19,6 +19,7 @@ from step_actions.utils import find_closest_agent, move_out_of_the_way
 from step_actions.assign_actions_to_robots_needing_charge import assign_actions_to_robots_needing_charge
 from step_actions.assign_robots_to_boxes_needing_storage import assign_robots_to_boxes_needing_storage
 from step_actions.fullfill_shipping_orders import fullfill_shipping_orders
+from step_actions.spawn_box import spawn_box
 
 class Room(Model):
     def __init__(self, M: int = 20, N: int = 20,
@@ -58,6 +59,20 @@ class Room(Model):
         self.grid.place_agent(charge_station, charge_station_position)
         available_positions.remove(charge_station_position)
 
+        # Posicionando las cintas transportadoras
+        #conveyor_belt_positions = [(8, 19), (8, 18), (6, 19), (6, 18), (0, 16), (1, 16), (2, 16), (3, 16), (4, 16), (5, 16), (6, 16), (7, 16), (8, 16), (9, 16), (10, 16), (11, 16), (12, 16), (13, 16), (14, 16), (15, 16), (16, 16), (17, 16)]
+        conveyor_belt_positions = [(8, 19, True), (8, 18, False), (6, 19, True), (6, 18, False)]
+        for i, pos in enumerate(conveyor_belt_positions):
+            conveyor_belt = ConveyorBelt("5"+str(i), self, direction=(0, -1), is_spawn_point=pos[2])
+            self.grid.place_agent(conveyor_belt, (pos[0], pos[1]))
+            available_positions.remove((pos[0], pos[1]))
+        # Posicionando estantes de recolección
+        collection_shelf_positions = [(8, 17), (6, 17)]
+        for i, pos in enumerate(collection_shelf_positions):
+            shelf = Shelf("2"+str(i), self, is_storage=False)
+            self.grid.place_agent(shelf, pos)
+            available_positions.remove(pos)
+
         # Posicionando los estantes
         for i in range(4, 15, 2):
             shelf_position = (0, i+1)
@@ -84,29 +99,30 @@ class Room(Model):
             self.schedule.add(robot)
 
         self.datacollector = DataCollector(
-            model_reporters={"AgentActions": get_agent_actions},
+            model_reporters={"AgentActions": get_agent_actions, "OutBoxesNeeded": lambda model: model.out_boxes_needed},
         )
 
     def remove_agent(self, agent):
         self.grid.remove_agent(agent)
 
     def step(self):
-        assign_actions_to_robots_needing_charge(self)
+        spawn_box(self)
         assign_robots_to_boxes_needing_storage(self)
+        assign_actions_to_robots_needing_charge(self)
         fullfill_shipping_orders(self)
 
-        current_step = self.schedule.steps
-        if current_step % (60//self.in_boxes_per_minute) == 0:
-            instantiate_box(self)
+        # current_step = self.schedule.steps
+        # if current_step % (60//self.in_boxes_per_minute) == 0:
+        #     instantiate_box(self)
 
         self.datacollector.collect(self)
         self.schedule.step()
 
-def instantiate_box(model: Model):
-    box_position = (random.randint(5, 15), random.randint(5, 15))
-    uuid = model.schedule.steps
-    box = Box(uuid*2, model)
-    model.grid.place_agent(box, box_position)
+# def instantiate_box(model: Model):
+#     box_position = (random.randint(5, 15), random.randint(5, 15))
+#     uuid = model.schedule.steps
+#     box = Box(uuid*2, model)
+#     model.grid.place_agent(box, box_position)
 
 def get_agent_actions(model: Model) -> list:
     agent_actions = list()

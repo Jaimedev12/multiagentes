@@ -9,6 +9,7 @@ from agent_models.Room import Room
 from agent_models.ChargingStation import ChargingStation
 from agent_models.Shelf import Shelf
 from agent_models.ShippingShelf import ShippingShelf
+from agent_models.ConveyorBelt import ConveyorBelt
 
 MAX_NUMBER_ROBOTS = 20
 MAX_NUMBER_IN_BOXES_PER_MINUTE = 60
@@ -36,6 +37,12 @@ def agent_portrayal(agent):
             portrayal["Color"] = "red"
         return portrayal
     
+    elif isinstance(agent, ConveyorBelt):
+        portrayal = {"Shape": "rect", "Filled": "true", "Layer": 1, "w": 0.9, "h": 0.9, 
+                     "Color": "white", "text_color": "Black", "text": "🎞️"}
+
+        return portrayal
+
     elif isinstance(agent, ShippingShelf):
         portrayal = {"Shape": "rect", "Filled": "true", "Layer": 1, "w": 0.9, "h": 0.9, 
                      "Color": "white", "text_color": "Black", "text": "⬆️"}
@@ -70,6 +77,12 @@ def agent_portrayal(agent):
 
 grid = mesa.visualization.CanvasGrid(
     agent_portrayal, 20, 20, 400, 400)
+
+chart_pending_shipments = mesa.visualization.ChartModule(
+    [{"Label": "OutBoxesNeeded", "Color": '#36A2EB', "label": "Peding Shipments"}],
+    50, 200,
+    data_collector_name="datacollector"
+)
 
 
 model_params = {
@@ -108,6 +121,6 @@ model_params = {
 }
 
 visualization = mesa.visualization.ModularServer(
-    Room, [grid],
+    Room, [grid, chart_pending_shipments],
     "Reto Grafiteros", model_params, 8521
 )

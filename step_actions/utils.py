@@ -37,13 +37,13 @@ def find_closest_agent(start_pos, is_target, is_not_valid, model: Model):
                 if is_not_valid(agent):
                     break
 
+            for agent in agents:
                 if is_target(agent):
                     return agent
                 
                 queue.append(agent.pos)
 
     return 0
-
 
 def move_out_of_the_way(robot: Robot, model: Model):
     closest_valid_cell = find_closest_agent(

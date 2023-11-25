@@ -5,6 +5,7 @@ from agent_models.Cell import Cell
 from agent_models.Box import Box
 from agent_models.ChargingStation import ChargingStation
 from agent_models.Shelf import Shelf
+from agent_models.ConveyorBelt import ConveyorBelt
 
 from response_format.ActionType import ActionType
 from response_format.AgentAction import AgentAction
@@ -72,6 +73,7 @@ class Robot(Agent):
         agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
         box_to_remove = list(filter(lambda agent: isinstance(agent, Box), agents_in_pos))[0]
         self.model.remove_agent(box_to_remove)
+        self.model.schedule.remove(box_to_remove)
 
     def store_box(self):
         self.is_lifting_box = False
@@ -89,6 +91,7 @@ class Robot(Agent):
 
     def ship_box(self):
         self.is_lifting_box = False
+        self.model.out_boxes_needed -= 1
 
     def charge(self):
         self.cur_charge = min(self.cur_charge+self.charge_rate, self.max_charge)
@@ -109,12 +112,14 @@ class Robot(Agent):
         
         # Marcar posiciones bloqueadas
         blocked_positions = set()
-        for cell in neighbor_agents:
-            if (isinstance(cell, (Robot))
-                    or (cell.pos in self.current_path_visited_dict) # Ya se visitó en el recorrido actual
-                    or (isinstance(cell, Cell) and cell.is_apartada) # Ya está apartada la celda
-                    or (self.is_lifting_box and isinstance(cell, Shelf) and cell.is_occupied)): # No se puede pasar por un estante ocupado mientras se carga una caja           
-                blocked_positions.add(cell.pos)
+        for agent in neighbor_agents:
+            if (isinstance(agent, (Robot))
+                    or (agent.pos in self.current_path_visited_dict) # Ya se visitó en el recorrido actual
+                    or (isinstance(agent, Cell) and agent.is_apartada) # Ya está apartada la celda
+                    or (self.is_lifting_box and isinstance(agent, Shelf) and agent.is_occupied) # No se puede pasar por un estante ocupado mientras se carga una caja      
+                    or (isinstance(agent, ChargingStation) and agent.is_apartada)     
+                    or (isinstance(agent, ConveyorBelt))): #
+                blocked_positions.add(agent.pos)
 
         neighbor_positions = self.model.grid.get_neighborhood(
             self.pos, moore=True, include_center=False)
