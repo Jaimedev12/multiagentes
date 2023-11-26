@@ -75,6 +75,12 @@ class Robot(Agent):
         box_to_remove = list(filter(lambda agent: isinstance(agent, Box), agents_in_pos))[0]
         self.model.remove_agent(box_to_remove)
         self.model.schedule.remove(box_to_remove)
+        
+        agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
+        shelf = list(filter(lambda agent: isinstance(agent, Shelf), agents_in_pos))[0]
+        shelf.is_occupied = False
+        print("Shelf position: ", shelf.pos)
+        print("Shelf is occupied: ", shelf.is_occupied)
 
     def store_box(self):
         self.is_lifting_box = False
@@ -118,7 +124,7 @@ class Robot(Agent):
         blocked_positions = set()
         for agent in neighbor_agents:
             if (isinstance(agent, (Robot))
-                    or (agent.pos in self.current_path_visited_dict) # Ya se visitó en el recorrido actual
+                    # or (agent.pos in self.current_path_visited_dict) # Ya se visitó en el recorrido actual
                     or (isinstance(agent, Cell) and agent.is_apartada) # Ya está apartada la celda
                     or (self.is_lifting_box and isinstance(agent, Shelf) and agent.is_occupied) # No se puede pasar por un estante ocupado mientras se carga una caja      
                     or (isinstance(agent, ChargingStation) and agent.is_apartada)     

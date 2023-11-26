@@ -12,6 +12,7 @@ IN_BOXES_PER_MINUTE = 1
 OUT_BOXES_PER_MINUTE = 1
 NUM_STEPS = 100
 simulation_array = list()
+out_boxes_array = list()
 robot_positions = list()
 
 @app.route('/hello-world', methods=['GET'])
@@ -29,7 +30,7 @@ def start_visualization():
     
 @app.route('/start-simulation', methods=['GET'])
 def start_simulation():
-    global simulation_array
+    global simulation_array, out_boxes_array
     try:
         simulation = Simulation(_N=GRID_SIZE, 
                                 _M=GRID_SIZE, 
@@ -41,6 +42,7 @@ def start_simulation():
                                 _robot_positions=robot_positions)
         simulation.execute_simulation()
         simulation_array = simulation.simulation_actions
+        out_boxes_array = simulation.out_boxes_needed_in_steps
         return "Simulation started!"
     except Exception as e:
 
@@ -51,7 +53,13 @@ def start_simulation():
 @app.route('/simulation-step/<int:index>', methods=['GET'])
 def get_simulation_step(index):
     try:
-        return list(map(serialize_agent_action_to_json, simulation_array[index]))
+        response_object = {
+            "agent_actions": list(map(serialize_agent_action_to_json, simulation_array[index])),
+            "out_boxes_needed": out_boxes_array[index]
+        }
+
+        # return list(map(serialize_agent_action_to_json, simulation_array[index]))
+        return jsonify(response_object)
     except Exception as e:
         print(e)
         response = make_response(jsonify({"msg": "Error when trying to get the simulation step"}), 500)

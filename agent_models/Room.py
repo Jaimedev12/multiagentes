@@ -106,10 +106,10 @@ class Room(Model):
         self.grid.remove_agent(agent)
 
     def step(self):
+        assign_actions_to_robots_needing_charge(self)
         spawn_box(self)
         fullfill_shipping_orders(self)
         assign_robots_to_boxes_needing_storage(self)
-        assign_actions_to_robots_needing_charge(self)
         
         self.datacollector.collect(self)
         self.schedule.step()
