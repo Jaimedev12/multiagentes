@@ -8,6 +8,9 @@ app = Flask(__name__)
 
 GRID_SIZE = 20
 NUMBER_ROBOTS = 1
+IN_BOXES_PER_MINUTE = 1
+OUT_BOXES_PER_MINUTE = 1
+NUM_STEPS = 100
 simulation_array = list()
 robot_positions = list()
 
@@ -28,7 +31,14 @@ def start_visualization():
 def start_simulation():
     global simulation_array
     try:
-        simulation = Simulation(GRID_SIZE, GRID_SIZE, NUMBER_ROBOTS, 'Fija', 50, robot_positions)
+        simulation = Simulation(_N=GRID_SIZE, 
+                                _M=GRID_SIZE, 
+                                _num_robots=NUMBER_ROBOTS, 
+                                _modo_pos_inicial='Fija', 
+                                _num_steps=NUM_STEPS, 
+                                _in_boxes_per_minute=IN_BOXES_PER_MINUTE, 
+                                _out_boxes_per_minute=OUT_BOXES_PER_MINUTE, 
+                                _robot_positions=robot_positions)
         simulation.execute_simulation()
         simulation_array = simulation.simulation_actions
         return "Simulation started!"
@@ -59,6 +69,21 @@ def set_positions():
         print(e)
         response = make_response(jsonify({"error": "Failed to process positions"}), 500)
         return response
+    
+@app.route('/change_params', methods=['POST'])
+def change_params():
+    global IN_BOXES_PER_MINUTE, OUT_BOXES_PER_MINUTE, NUM_STEPS
+    try:
+        data = request.get_json()
+        IN_BOXES_PER_MINUTE = data["in_boxes"]
+        OUT_BOXES_PER_MINUTE = data["out_boxes"]
+        NUM_STEPS = data["num_steps"]
+        return "Params received and processed successfully!"
+    except Exception as e:
+        print(e)
+        response = make_response(jsonify({"error": "Failed to process params"}), 500)
+        return response
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)

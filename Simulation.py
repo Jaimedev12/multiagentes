@@ -5,14 +5,18 @@ class Simulation:
                   _num_robots: int = 1, 
                   _modo_pos_inicial: str = '', 
                   _num_steps: int = 10,
-                  robot_positions: list = list()):
+                  _in_boxes_per_minute: int = 1,
+                  _out_boxes_per_minute: int = 1,
+                  _robot_positions: list = list()):
         self.simulation_actions = list()
         self.num_steps = _num_steps
         
-        mapped_robot_positions = [(pos['x'], pos['z']) for pos in robot_positions]
+        mapped_robot_positions = [(pos['x'], pos['z']) for pos in _robot_positions]
         self.starter_model = Room(M=_M, N=_N, 
                                   num_robots=_num_robots, 
                                   modo_pos_inicial=_modo_pos_inicial,
+                                  in_boxes_per_minute=_in_boxes_per_minute,
+                                  out_boxes_per_minute=_out_boxes_per_minute,
                                   robot_positions=mapped_robot_positions)
 
     def execute_simulation(self):
