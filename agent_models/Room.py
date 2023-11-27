@@ -38,7 +38,8 @@ class Room(Model):
         self.robot_positions = robot_positions
         
         self.out_boxes_needed = 0
-        self.number_shippment_orders = 0
+        self.out_boxes_pending_assigment = 0
+        self.shipment_orders_pending = 0
 
         self.grid = MultiGrid(M, N, False)
         self.schedule = SimultaneousActivation(self)
@@ -51,15 +52,21 @@ class Room(Model):
             self.grid.place_agent(cell, pos)
 
         # Posicionamiento de la estación de carga
-        charge_station_position = (1, 1)
-        charge_station = ChargingStation(20, self)
-        self.grid.place_agent(charge_station, charge_station_position)
-        available_positions.remove(charge_station_position)
+        charging_station_positions = [(1, 1), (3, 1), (1, 18), (3, 18)]
+        for i, pos in enumerate(charging_station_positions):
+            charge_station = ChargingStation("2"+str(i), self)
+            self.grid.place_agent(charge_station, pos)
+            available_positions.remove(pos)
 
-        charge_station_position = (1, 18)
-        charge_station = ChargingStation(21, self)
-        self.grid.place_agent(charge_station, charge_station_position)
-        available_positions.remove(charge_station_position)
+        # charge_station_position = (1, 1)
+        # charge_station = ChargingStation(20, self)
+        # self.grid.place_agent(charge_station, charge_station_position)
+        # available_positions.remove(charge_station_position)
+
+        # charge_station_position = (1, 18)
+        # charge_station = ChargingStation(21, self)
+        # self.grid.place_agent(charge_station, charge_station_position)
+        # available_positions.remove(charge_station_position)
 
         # Posicionando las cintas transportadoras
         #conveyor_belt_positions = [(8, 19), (8, 18), (6, 19), (6, 18), (0, 16), (1, 16), (2, 16), (3, 16), (4, 16), (5, 16), (6, 16), (7, 16), (8, 16), (9, 16), (10, 16), (11, 16), (12, 16), (13, 16), (14, 16), (15, 16), (16, 16), (17, 16)]
@@ -99,7 +106,7 @@ class Room(Model):
             self.schedule.add(robot)
 
         self.datacollector = DataCollector(
-            model_reporters={"AgentActions": get_agent_actions, "OutBoxesNeeded": lambda model: model.out_boxes_needed},
+            model_reporters={"AgentActions": get_agent_actions, "OutBoxesNeeded": lambda model: model.shipment_orders_pending},
         )
 
     def remove_agent(self, agent):

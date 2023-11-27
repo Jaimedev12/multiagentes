@@ -29,12 +29,11 @@ class Simulation:
         for i in range(self.num_steps):
             print("Ejecutando paso ", i)
             self.starter_model.step()
-            self.out_boxes_needed_in_steps.append(self.starter_model.out_boxes_needed)
+            self.out_boxes_needed_in_steps.append(self.starter_model.shipment_orders_pending)
 
         print("Se ejecutaron todos los pasos de la simulación")
 
         self.simulation_actions = self.starter_model.datacollector.model_vars['AgentActions']
-        # self.out_boxes_needed_in_steps = self.starter_model.out_boxes_needed
             
         # for i in range(len(self.simulation_actions)):
         #     print("Action: ", self.simulation_actions[i], "\n")

@@ -17,11 +17,11 @@ from .utils import get_distance, find_closest_agent, move_out_of_the_way
 
 def fullfill_shipping_orders(model: Model):
     update_shipping_orders(model)
-    if model.out_boxes_needed <= 0:
+    if model.shipment_orders_pending <= 0:
         print("No hay pedidos por surtir")
         return
     
-    for i in range(0, model.out_boxes_needed):
+    for i in range(0, model.out_boxes_pending_assigment):
         (shipping_shelf, occupied_shelf) = find_closest_ShippingShelf_OccupiedShelf_pair(model)
         if shipping_shelf == 0 or occupied_shelf == 0:
             if shipping_shelf == 0:
@@ -48,7 +48,7 @@ def fullfill_shipping_orders(model: Model):
             occupied_shelf.is_apartado = False
             break
 
-        model.out_boxes_needed -= 1
+        model.out_boxes_pending_assigment -= 1
 
         # if move_out_of_the_way(closest_robot, model) == False:
         #     closest_robot.objectives_assigned = list()
@@ -96,7 +96,8 @@ def find_closest_ShippingShelf_OccupiedShelf_pair(model: Model):
 def update_shipping_orders(model: Model):
     current_step = model.schedule.steps
     if current_step % (60//model.out_boxes_per_minute) == 0:
-        model.out_boxes_needed += 1
+        model.out_boxes_pending_assigment += 1
+        model.shipment_orders_pending += 1
 
 def get_occupied_shelves(model: Model) -> list:
     occupied_shelves = list()
