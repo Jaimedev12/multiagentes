@@ -18,21 +18,15 @@ from .utils import get_distance, find_closest_agent, move_out_of_the_way
 def fullfill_shipping_orders(model: Model):
     update_shipping_orders(model)
     if model.shipment_orders_pending <= 0:
-        print("No hay pedidos por surtir")
         return
     
     for i in range(0, model.out_boxes_pending_assigment):
         (shipping_shelf, occupied_shelf) = find_closest_ShippingShelf_OccupiedShelf_pair(model)
         if shipping_shelf == 0 or occupied_shelf == 0:
-            if shipping_shelf == 0:
-                print("No hay estantes de envio disponibles")
-            if occupied_shelf == 0:
-                print("No hay estantes ocupados disponibles")
             break
 
         closest_robot = find_closest_robot_from_shelf(occupied_shelf, model)
         if closest_robot == 0:
-            print("No hay robots disponibles")
             break
 
         if assign_occupied_shelf_to_robot(occupied_shelf, closest_robot, model) == False:

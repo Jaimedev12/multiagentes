@@ -56,10 +56,6 @@ def move_out_of_the_way(robot: Robot, model: Model):
 
     if closest_valid_cell == 0:
         return False
-    
-    # closest_valid_cell.is_apartada = True
-
-    print("Wants to move to: ", closest_valid_cell.pos)
 
     def when_arrives(robot: Robot):
         robot.target_position = None

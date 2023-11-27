@@ -17,7 +17,6 @@ def spawn_box(model: Model):
 
     available_positions = get_available_spawning_positions(model)   
     if len(available_positions) == 0:
-        print('No hay posiciones disponibles para spawnear una caja')
         return
 
     instantiate_box(model, available_positions[random.randint(0, len(available_positions)-1)])
