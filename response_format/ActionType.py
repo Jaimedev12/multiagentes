@@ -5,3 +5,4 @@ class ActionType(Enum):
     PICK = "PICK"
     DROP = "DROP"
     CHARGE = "CHARGE"
+    SPAWN = "SPAWN"

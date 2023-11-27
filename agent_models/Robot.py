@@ -79,8 +79,6 @@ class Robot(Agent):
         agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
         shelf = list(filter(lambda agent: isinstance(agent, Shelf), agents_in_pos))[0]
         shelf.is_occupied = False
-        print("Shelf position: ", shelf.pos)
-        print("Shelf is occupied: ", shelf.is_occupied)
 
     def store_box(self):
         self.is_lifting_box = False

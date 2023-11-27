@@ -45,5 +45,6 @@ def get_available_spawning_positions(model: Model):
 def instantiate_box(model: Model, pos: tuple):
     num_steps = model.schedule.steps
     box = Box(str(num_steps)+'a', model)
+    box.just_spawned = True
     model.grid.place_agent(box, pos)
     model.schedule.add(box)

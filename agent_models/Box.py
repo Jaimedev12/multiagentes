@@ -10,16 +10,23 @@ from response_format.AgentAction import AgentAction
 from response_format.GridPosition import GridPosition
 
 class Box(Agent):
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id, model, just_spawned=False):
         super().__init__(unique_id, model)
         self.is_apartada = False
         self.sig_pos = None
         self.is_ready_to_pick_up = False
+        self.just_spawned = just_spawned
 
         self.cur_action_type = None
         self.cur_agent_action = None
     
     def step(self):
+        if self.just_spawned:
+            self.just_spawned = False
+            self.dont_move()
+            self.cur_action_type = ActionType.SPAWN
+            return
+
         conveyor_belt = self.get_conveyor_belt()
         if conveyor_belt == 0: 
             self.dont_move()
@@ -40,9 +47,12 @@ class Box(Agent):
     def advance(self):
         self.cur_agent_action = self.get_action()
         self.model.grid.move_agent(self, self.sig_pos)
+        self.cur_action_type = None
 
     def get_action(self):
-        self.cur_action_type = ActionType.MOVE
+        if self.cur_action_type == None:
+            self.cur_action_type = ActionType.MOVE
+
         return AgentAction(_from=GridPosition(self.pos[0], self.pos[1]), _to=GridPosition(self.sig_pos[0], self.sig_pos[1]), _type=self.cur_action_type)
 
 
