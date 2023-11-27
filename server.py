@@ -11,7 +11,6 @@ GRID_SIZE = 20
 NUMBER_ROBOTS = 1
 IN_BOXES_PER_MINUTE = 1
 OUT_BOXES_PER_MINUTE = 1
-NUM_STEPS = 100
 robot_positions = list()
 simulation = None
 
@@ -35,8 +34,7 @@ def start_simulation():
         simulation = Simulation(_N=GRID_SIZE, 
                                 _M=GRID_SIZE, 
                                 _num_robots=NUMBER_ROBOTS, 
-                                _modo_pos_inicial='Fija', 
-                                _num_steps=NUM_STEPS, 
+                                _modo_pos_inicial='Fija',
                                 _in_boxes_per_minute=IN_BOXES_PER_MINUTE, 
                                 _out_boxes_per_minute=OUT_BOXES_PER_MINUTE, 
                                 _robot_positions=robot_positions)
@@ -81,12 +79,11 @@ def set_positions():
     
 @app.route('/change_params', methods=['POST'])
 def change_params():
-    global IN_BOXES_PER_MINUTE, OUT_BOXES_PER_MINUTE, NUM_STEPS
+    global IN_BOXES_PER_MINUTE, OUT_BOXES_PER_MINUTE
     try:
         data = request.get_json()
         IN_BOXES_PER_MINUTE = data["in_boxes"]
         OUT_BOXES_PER_MINUTE = data["out_boxes"]
-        NUM_STEPS = data["num_steps"]
         return "Params received and processed successfully!"
     except Exception as e:
         print(e)

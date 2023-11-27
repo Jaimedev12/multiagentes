@@ -1,5 +1,6 @@
 from mesa.agent import Agent
 from collections import deque
+import math
 
 from agent_models.Cell import Cell
 from agent_models.Box import Box
@@ -29,6 +30,8 @@ class Robot(Agent):
         self.is_charging = False
         self.is_lifting_box = False
 
+        self.cur_movement_positions_apartadas = list()
+
         # Response variables
         self.cur_action_type = None
         self.cur_agent_action = None
@@ -38,7 +41,7 @@ class Robot(Agent):
         self.num_recharges = 0
 
     def calc_dist(self, p1, p2):
-        return abs(p1[0] - p2[0]) + abs(p1[1] - p2[1])
+        return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
     def dont_move(self):
         self.sig_pos = self.pos
@@ -56,17 +59,28 @@ class Robot(Agent):
 
         return neighbors
 
-    def apartar_pos(self, pos):
-        agentes_en_pos = self.model.grid.get_cell_list_contents([pos])
-        celda_en_pos = filter(lambda agente : isinstance(agente, Cell), agentes_en_pos)
-        for celda in celda_en_pos:
-            celda.is_apartada = True
+    def apartar_movement_positions(self, sig_pos):
+        self.cur_movement_positions_apartadas.append(sig_pos)
+        if sig_pos[0] != self.pos[0]:
+            self.cur_movement_positions_apartadas.append((sig_pos[0], self.pos[1]))
+            self.cur_movement_positions_apartadas.append((self.pos[0], sig_pos[1]))
 
-    def free_pos(self, pos):
+        for pos in self.cur_movement_positions_apartadas:
+            agentes_en_pos = self.model.grid.get_cell_list_contents([pos])
+            celda_en_pos = list(filter(lambda agente : isinstance(agente, Cell), agentes_en_pos))[0]
+            celda_en_pos.is_apartada = True
+
+    def apartar_single_position(self, pos):
         agentes_en_pos = self.model.grid.get_cell_list_contents([pos])
-        celda_en_pos = filter(lambda agente : isinstance(agente, Cell), agentes_en_pos)
-        for celda in celda_en_pos:
-            celda.is_apartada = False
+        celda_en_pos = list(filter(lambda agente : isinstance(agente, Cell), agentes_en_pos))[0]
+        celda_en_pos.is_apartada = True
+
+    def free_movement_positions(self):
+        for pos in self.cur_movement_positions_apartadas:
+            agentes_en_pos = self.model.grid.get_cell_list_contents([pos])
+            celda_en_pos = list(filter(lambda agente : isinstance(agente, Cell), agentes_en_pos))[0]
+            celda_en_pos.is_apartada = False
+        self.cur_movement_positions_apartadas = list()
 
     def pick_box_from_collection_shelf(self):
         self.is_lifting_box = True
@@ -146,7 +160,7 @@ class Robot(Agent):
         
         neighbors_by_distance = self.order_neighbors_by_distance(allowed_positions, self.target_position)
         self.sig_pos = neighbors_by_distance[0]
-        self.apartar_pos(self.sig_pos)
+        self.apartar_movement_positions(self.sig_pos)
 
 
     def step(self):
@@ -196,8 +210,10 @@ class Robot(Agent):
         self.cur_action_type = None
         
         if self.pos != self.sig_pos:
-            self.free_pos(self.pos)
+            self.free_movement_positions()
+            self.apartar_single_position(self.sig_pos)
             self.current_path_visited_dict[self.pos] = True
+            self.cur_movement_positions_apartadas.append(self.sig_pos)
             self.movements += 1  
             self.cur_charge -= 1  
         # else :

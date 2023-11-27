@@ -128,5 +128,5 @@ model_params = {
 
 visualization = mesa.visualization.ModularServer(
     Room, [grid, chart_pending_shipments, chart_shipped_orders],
-    "Reto Grafiteros", model_params, 8522
+    "Reto Grafiteros", model_params, 8523
 )

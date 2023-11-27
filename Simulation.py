@@ -3,16 +3,13 @@ from agent_models.Room import Room
 class Simulation:
     def __init__(self, _M: int = 20, _N: int = 20,
                   _num_robots: int = 1, 
-                  _modo_pos_inicial: str = '', 
-                  _num_steps: int = 10,
+                  _modo_pos_inicial: str = '',
                   _in_boxes_per_minute: int = 1,
                   _out_boxes_per_minute: int = 1,
                   _robot_positions: list = list()):
         
         self.simulation_actions = list()
         self.out_boxes_needed_in_steps = list()
-
-        self.num_steps = _num_steps
         
         mapped_robot_positions = [(pos['x'], pos['z']) for pos in _robot_positions]
         self.starter_model = Room(M=_M, N=_N, 
