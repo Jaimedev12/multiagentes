@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, send_file, make_response
+
 from visualization import visualization
 from Simulation import Simulation
 
@@ -11,9 +12,8 @@ NUMBER_ROBOTS = 1
 IN_BOXES_PER_MINUTE = 1
 OUT_BOXES_PER_MINUTE = 1
 NUM_STEPS = 100
-simulation_array = list()
-out_boxes_array = list()
 robot_positions = list()
+simulation = None
 
 @app.route('/hello-world', methods=['GET'])
 def hello():
@@ -30,7 +30,7 @@ def start_visualization():
     
 @app.route('/start-simulation', methods=['GET'])
 def start_simulation():
-    global simulation_array, out_boxes_array
+    global simulation
     try:
         simulation = Simulation(_N=GRID_SIZE, 
                                 _M=GRID_SIZE, 
@@ -40,12 +40,9 @@ def start_simulation():
                                 _in_boxes_per_minute=IN_BOXES_PER_MINUTE, 
                                 _out_boxes_per_minute=OUT_BOXES_PER_MINUTE, 
                                 _robot_positions=robot_positions)
-        simulation.execute_simulation()
-        simulation_array = simulation.simulation_actions
-        out_boxes_array = simulation.out_boxes_needed_in_steps
+        simulation.start_simulation()
         return "Simulation started!"
     except Exception as e:
-
         print(e)
         response = make_response(jsonify({"error": "Simulation could not be started!"}), 500)
         return response
@@ -53,12 +50,16 @@ def start_simulation():
 @app.route('/simulation-step/<int:index>', methods=['GET'])
 def get_simulation_step(index):
     try:
+        current_index = len(simulation.simulation_actions)-1
+
+        if index > current_index:
+            simulation.do_next_step()
+
         response_object = {
-            "agent_actions": list(map(serialize_agent_action_to_json, simulation_array[index])),
-            "out_boxes_needed": out_boxes_array[index]
+            "agent_actions": list(map(serialize_agent_action_to_json, simulation.simulation_actions[index])),
+            "out_boxes_needed": simulation.out_boxes_needed_in_steps[index]
         }
 
-        # return list(map(serialize_agent_action_to_json, simulation_array[index]))
         return jsonify(response_object)
     except Exception as e:
         print(e)

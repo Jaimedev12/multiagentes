@@ -22,13 +22,21 @@ class Simulation:
                                   out_boxes_per_minute=_out_boxes_per_minute,
                                   robot_positions=mapped_robot_positions)
 
-    def execute_simulation(self):
+    def do_next_step(self):
+        self.starter_model.step()
+        self.simulation_actions = self.starter_model.datacollector.model_vars['AgentActions']
+        self.out_boxes_needed_in_steps.append(self.starter_model.shipment_orders_pending)
+
+    def start_simulation(self):
         self.simulation_actions = list()
         self.out_boxes_needed_in_steps = list()
-
-        for i in range(self.num_steps):
-            self.starter_model.step()
-            self.out_boxes_needed_in_steps.append(self.starter_model.shipment_orders_pending)
-
+        self.starter_model.step()
         self.simulation_actions = self.starter_model.datacollector.model_vars['AgentActions']
+        self.out_boxes_needed_in_steps.append(self.starter_model.shipment_orders_pending)
+
+        # for i in range(self.num_steps):
+        #     self.starter_model.step()
+        #     self.out_boxes_needed_in_steps.append(self.starter_model.shipment_orders_pending)
+
+        # self.simulation_actions = self.starter_model.datacollector.model_vars['AgentActions']
             
