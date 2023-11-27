@@ -31,7 +31,7 @@ def assign_actions_to_robots_needing_charge(model: Model):
         #     continue
 
 def get_robots_needing_charge(model: Model) -> list:
-    min_charge_allowed = 60
+    min_charge_allowed = 70
     robots_needing_charge = list()
     for cell in model.grid.coord_iter():
         cell_content, pos = cell

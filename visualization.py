@@ -15,7 +15,7 @@ MAX_NUMBER_ROBOTS = 20
 MAX_NUMBER_IN_BOXES_PER_MINUTE = 60
 MAX_NUMBER_OUT_BOXES_PER_MINUTE = 60
 
-MIN_CHARGE = 60
+MIN_CHARGE = 70
 
 def agent_portrayal(agent):
     if isinstance(agent, Robot):
@@ -84,6 +84,12 @@ chart_pending_shipments = mesa.visualization.ChartModule(
     data_collector_name="datacollector"
 )
 
+chart_shipped_orders = mesa.visualization.ChartModule(
+    [{"Label": "OutBoxesShipped", "Color": '#36A2EB', "label": "Shipped Orders"}],
+    50, 200,
+    data_collector_name="datacollector"
+)
+
 
 model_params = {
     "num_robots": mesa.visualization.Slider(
@@ -121,6 +127,6 @@ model_params = {
 }
 
 visualization = mesa.visualization.ModularServer(
-    Room, [grid, chart_pending_shipments],
+    Room, [grid, chart_pending_shipments, chart_shipped_orders],
     "Reto Grafiteros", model_params, 8522
 )
