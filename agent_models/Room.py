@@ -15,7 +15,6 @@ from agent_models.ShippingShelf import ShippingShelf
 
 from collections import deque
 
-from step_actions.utils import find_closest_agent, move_out_of_the_way
 from step_actions.assign_actions_to_robots_needing_charge import assign_actions_to_robots_needing_charge
 from step_actions.assign_robots_to_boxes_needing_storage import assign_robots_to_boxes_needing_storage
 from step_actions.fullfill_shipping_orders import fullfill_shipping_orders
@@ -39,6 +38,7 @@ class Room(Model):
         self.robot_positions = robot_positions
         
         self.out_boxes_needed = 0
+        self.number_shippment_orders = 0
 
         self.grid = MultiGrid(M, N, False)
         self.schedule = SimultaneousActivation(self)
@@ -51,12 +51,12 @@ class Room(Model):
             self.grid.place_agent(cell, pos)
 
         # Posicionamiento de la estación de carga
-        charge_station_position = (0, 0)
+        charge_station_position = (1, 1)
         charge_station = ChargingStation(20, self)
         self.grid.place_agent(charge_station, charge_station_position)
         available_positions.remove(charge_station_position)
 
-        charge_station_position = (0, 19)
+        charge_station_position = (1, 18)
         charge_station = ChargingStation(21, self)
         self.grid.place_agent(charge_station, charge_station_position)
         available_positions.remove(charge_station_position)

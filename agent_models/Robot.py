@@ -99,7 +99,6 @@ class Robot(Agent):
     def ship_box(self):
         self.is_lifting_box = False
         self.cur_action_type = ActionType.DROP
-        self.model.out_boxes_needed -= 1
 
     def charge(self):
         self.cur_charge = min(self.cur_charge+self.charge_rate, self.max_charge)

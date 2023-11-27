@@ -22,12 +22,15 @@ def assign_actions_to_robots_needing_charge(model: Model):
             robot.objectives_assigned = list()
             continue
 
-        if move_out_of_the_way(robot, model) == False:
+        if assign_move_out_of_the_way_action(robot, model) == False:
             robot.objectives_assigned = list()
             continue
 
-def get_robots_needing_charge(model: Model) -> list:
+        # if move_out_of_the_way(robot, model) == False:
+        #     robot.objectives_assigned = list()
+        #     continue
 
+def get_robots_needing_charge(model: Model) -> list:
     min_charge_allowed = 60
     robots_needing_charge = list()
     for cell in model.grid.coord_iter():
@@ -58,3 +61,6 @@ def assign_charge_station(robot: Robot, model: Model):
     #closest_charging_station.is_apartada = True
 
     return True
+
+def assign_move_out_of_the_way_action(robot: Robot, model: Model) :
+    robot.objectives_assigned.append((robot.objectives_assigned[len(robot.objectives_assigned)-1][0], lambda robot: move_out_of_the_way(robot, robot.model)))

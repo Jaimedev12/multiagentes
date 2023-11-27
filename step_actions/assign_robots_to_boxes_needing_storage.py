@@ -32,9 +32,14 @@ def assign_robots_to_boxes_needing_storage(model: Model):
             closest_robot.objectives_assigned = list()
             continue
 
-        if move_out_of_the_way(closest_robot, model) == False:
+        if assign_move_out_of_the_way_action(closest_robot, model) == False:
+            box.is_apartada = False
             closest_robot.objectives_assigned = list()
             continue
+
+        # if move_out_of_the_way(closest_robot, model) == False:
+        #     closest_robot.objectives_assigned = list()
+        #     continue
 
 
 def get_boxes_to_store(model: Model) -> list:
@@ -80,3 +85,6 @@ def assign_shelf_to_robot(robot: Robot, model: Model):
     
     closest_shelf.is_apartado = True
     robot.objectives_assigned.append((closest_shelf.pos, lambda robot: robot.store_box()))
+
+def assign_move_out_of_the_way_action(robot: Robot, model: Model) :
+    robot.objectives_assigned.append((robot.objectives_assigned[len(robot.objectives_assigned)-1][0], lambda robot: move_out_of_the_way(robot, robot.model)))

@@ -17,17 +17,22 @@ from .utils import get_distance, find_closest_agent, move_out_of_the_way
 
 def fullfill_shipping_orders(model: Model):
     update_shipping_orders(model)
-    if model.out_boxes_needed == 0:
+    if model.out_boxes_needed <= 0:
+        print("No hay pedidos por surtir")
         return
     
     for i in range(0, model.out_boxes_needed):
         (shipping_shelf, occupied_shelf) = find_closest_ShippingShelf_OccupiedShelf_pair(model)
         if shipping_shelf == 0 or occupied_shelf == 0:
+            if shipping_shelf == 0:
+                print("No hay estantes de envio disponibles")
+            if occupied_shelf == 0:
+                print("No hay estantes ocupados disponibles")
             break
-
 
         closest_robot = find_closest_robot_from_shelf(occupied_shelf, model)
         if closest_robot == 0:
+            print("No hay robots disponibles")
             break
 
         if assign_occupied_shelf_to_robot(occupied_shelf, closest_robot, model) == False:
@@ -38,10 +43,17 @@ def fullfill_shipping_orders(model: Model):
             occupied_shelf.is_apartado = False
             break
 
-        if move_out_of_the_way(closest_robot, model) == False:
+        if assign_move_out_of_the_way_action(closest_robot, model) == False:
             closest_robot.objectives_assigned = list()
             occupied_shelf.is_apartado = False
             break
+
+        model.out_boxes_needed -= 1
+
+        # if move_out_of_the_way(closest_robot, model) == False:
+        #     closest_robot.objectives_assigned = list()
+        #     occupied_shelf.is_apartado = False
+        #     break
 
 def assign_shipping_shelf_to_robot(shipping_shelf: ShippingShelf, robot: Robot, model: Model):
     robot.objectives_assigned.append((shipping_shelf.pos, lambda robot: robot.ship_box()))
@@ -53,6 +65,8 @@ def assign_occupied_shelf_to_robot(occupied_shelf: Shelf, robot: Robot, model: M
 
     return True
     
+def assign_move_out_of_the_way_action(robot: Robot, model: Model) :
+    robot.objectives_assigned.append((robot.objectives_assigned[len(robot.objectives_assigned)-1][0], lambda robot: move_out_of_the_way(robot, robot.model)))
 
 def find_closest_robot_from_shelf(shelf: Shelf, model: Model):
     closest_robot = find_closest_agent( 
@@ -63,7 +77,6 @@ def find_closest_robot_from_shelf(shelf: Shelf, model: Model):
             model=model)
     return closest_robot
     
-
 def find_closest_ShippingShelf_OccupiedShelf_pair(model: Model):
     shipping_shelves = get_shipping_shelves(model)
     occupied_shelves = get_occupied_shelves(model)
@@ -79,9 +92,6 @@ def find_closest_ShippingShelf_OccupiedShelf_pair(model: Model):
                 closest_distance = distance
 
     return closest_pair
-
-
-
 
 def update_shipping_orders(model: Model):
     current_step = model.schedule.steps
