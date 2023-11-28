@@ -50,9 +50,7 @@ class Box(Agent):
         self.cur_action_type = None
 
     def get_action(self):
-        if self.cur_action_type == None:
-            self.cur_action_type = ActionType.MOVE
-
+        print("cur_ action type: ", self.cur_action_type)
         return AgentAction(_from=GridPosition(self.pos[0], self.pos[1]), _to=GridPosition(self.sig_pos[0], self.sig_pos[1]), _type=self.cur_action_type)
 
 
@@ -62,6 +60,7 @@ class Box(Agent):
     def move(self, direction: tuple):
         next_pos = (self.pos[0] + direction[0], self.pos[1] + direction[1])
         self.sig_pos = next_pos
+        self.cur_action_type = ActionType.MOVE
 
     def get_collection_shelf(self):
         agents = self.model.grid.get_cell_list_contents([self.sig_pos])

@@ -121,11 +121,11 @@ def get_agent_actions(model: Model) -> list:
     for cell in model.grid.coord_iter():
         cell_content, pos = cell
         for obj in cell_content:
-            if isinstance(obj, Robot) and obj.cur_agent_action != None:
+            if isinstance(obj, Robot) and obj.cur_agent_action != None and obj.cur_agent_action._type != None:
                 agent_actions.append(obj.cur_agent_action)
                 obj.cur_agent_action = None
 
-            if isinstance(obj, Box) and obj.cur_agent_action != None:
+            if isinstance(obj, Box) and obj.cur_agent_action != None and obj.cur_agent_action._type != None:
                 agent_actions.append(obj.cur_agent_action)
                 obj.cur_agent_action = None
     
