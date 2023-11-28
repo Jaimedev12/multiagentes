@@ -73,7 +73,7 @@ class Box(Agent):
         next_pos = (self.pos[0] + conveyor_belt.direction[0], self.pos[1] + conveyor_belt.direction[1])
         agents = self.model.grid.get_cell_list_contents([next_pos])
         for agent in agents:
-            if isinstance(agent, Box):
+            if isinstance(agent, Box) or (hasattr(agent, "is_lifting_box") and agent.is_lifting_box):
                 return True
         return False
     
