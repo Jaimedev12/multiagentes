@@ -66,7 +66,10 @@ def find_closest_agent(start_pos, is_target, is_not_valid, model: Model):
 
             for agent in agents_in_neighbor_pos:                
                 if is_not_valid(agent):
+                    is_restricted = True
                     break
+            if is_restricted:
+                continue
 
             for agent in agents_in_neighbor_pos:
                 if is_target(agent):

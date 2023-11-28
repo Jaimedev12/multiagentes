@@ -42,6 +42,7 @@ class Room(Model):
         # Statistics
         self.shipment_orders_pending = 0
         self.shipped_orders = 0
+        self.spawned_boxes = 0
 
         self.grid = MultiGrid(M, N, False)
         self.schedule = SimultaneousActivation(self)
@@ -101,7 +102,8 @@ class Room(Model):
         self.datacollector = DataCollector(
             model_reporters={"AgentActions": get_agent_actions, 
                              "OutBoxesNeeded": lambda model: model.shipment_orders_pending,
-                             "OutBoxesShipped": lambda model: model.shipped_orders},
+                             "OutBoxesShipped": lambda model: model.shipped_orders, 
+                             "SpawnedBoxes": lambda model: model.spawned_boxes},
         )
 
     def remove_agent(self, agent):

@@ -90,6 +90,12 @@ chart_shipped_orders = mesa.visualization.ChartModule(
     data_collector_name="datacollector"
 )
 
+chart_spawned_boxes = mesa.visualization.ChartModule(
+    [{"Label": "SpawnedBoxes", "Color": '#36A2EB', "label": "Spawned Boxes"}],
+    50, 200,
+    data_collector_name="datacollector"
+)
+
 
 model_params = {
     "num_robots": mesa.visualization.Slider(
@@ -127,6 +133,6 @@ model_params = {
 }
 
 visualization = mesa.visualization.ModularServer(
-    Room, [grid, chart_pending_shipments, chart_shipped_orders],
+    Room, [grid, chart_pending_shipments, chart_shipped_orders, chart_spawned_boxes],
     "Reto Grafiteros", model_params, 8523
 )

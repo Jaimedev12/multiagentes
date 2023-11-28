@@ -20,6 +20,7 @@ def spawn_box(model: Model):
         return
 
     instantiate_box(model, available_positions[random.randint(0, len(available_positions)-1)])
+    model.spawned_boxes += 1
 
 def get_available_spawning_positions(model: Model):
     available_positions = list()
