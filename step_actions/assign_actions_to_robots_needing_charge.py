@@ -58,7 +58,7 @@ def assign_charge_station(robot: Robot, model: Model):
 
     robot.objectives_assigned.append((closest_charging_station.pos, when_arrives))
 
-    #closest_charging_station.is_apartada = True
+    closest_charging_station.is_apartada = True
 
     return True
 

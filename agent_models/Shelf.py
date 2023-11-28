@@ -6,3 +6,4 @@ class Shelf(Agent):
         self.is_apartado = False
         self.is_occupied = False
         self.is_storage = is_storage
+        self.not_allowed_movement_positions = [(-1, -1), (-1, 1), (1, -1), (1, 1)] # Diagonals

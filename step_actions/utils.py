@@ -30,20 +30,51 @@ def find_closest_agent(start_pos, is_target, is_not_valid, model: Model):
 
         neighbor_positions = model.grid.get_neighborhood(
             cur_pos, moore=True, include_center=False)
-        
+    
+        # Movement restrictions to force exit direction ------------------------
+        restricted_positions = set()
+        agents_in_current_pos = model.grid.get_cell_list_contents([cur_pos])
+        for agent in agents_in_current_pos:
+            if not hasattr(agent, 'not_allowed_movement_positions') or \
+                agent.not_allowed_movement_positions is None:
+                continue
+            for not_allowed_pos in agent.not_allowed_movement_positions:
+                pos = (cur_pos[0] + not_allowed_pos[0], cur_pos[1] + not_allowed_pos[1])
+                restricted_positions.add(pos)
+        # ------
+            
         for pos in neighbor_positions:
-            agents = model.grid.get_cell_list_contents([pos])
-            for agent in agents:                
+            if pos in restricted_positions:
+                continue
+
+            agents_in_neighbor_pos = model.grid.get_cell_list_contents([pos])
+
+            # Movement restrictions to force exit direction ------------------------
+            is_restricted = False
+            for agent in agents_in_neighbor_pos:
+                if not hasattr(agent, 'not_allowed_movement_positions') or \
+                    agent.not_allowed_movement_positions is None:
+                    continue
+                for not_allowed_pos in agent.not_allowed_movement_positions:
+                    new_pos = (pos[0] + not_allowed_pos[0], pos[1] + not_allowed_pos[1])
+                    if new_pos == cur_pos:
+                        is_restricted = True
+                        break
+            if is_restricted:
+                continue
+            # ------
+
+            for agent in agents_in_neighbor_pos:                
                 if is_not_valid(agent):
                     break
 
-            for agent in agents:
+            for agent in agents_in_neighbor_pos:
                 if is_target(agent):
                     return agent
                 
                 queue.append(agent.pos)
-
     return 0
+
 
 def move_out_of_the_way(robot: Robot, model: Model):
     closest_valid_cell = find_closest_agent(

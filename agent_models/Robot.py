@@ -125,9 +125,8 @@ class Robot(Agent):
             self.num_recharges += 1
 
             agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
-            charging_stations = list(filter(lambda agent: isinstance(agent, ChargingStation), agents_in_pos))
-            for station in charging_stations: # Solo debería haber uno
-                station.is_apartada = False
+            charging_station = list(filter(lambda agent: isinstance(agent, ChargingStation), agents_in_pos))[0]
+            charging_station.is_apartada = False
 
     def get_valid_neighbors(self):
         neighbor_agents = self.model.grid.get_neighbors(
@@ -139,20 +138,46 @@ class Robot(Agent):
             if (isinstance(agent, (Robot))
                     # or (agent.pos in self.current_path_visited_dict) # Ya se visitó en el recorrido actual
                     or (isinstance(agent, Cell) and agent.is_apartada) # Ya está apartada la celda
-                    or (self.is_lifting_box and isinstance(agent, Shelf) and agent.is_occupied) # No se puede pasar por un estante ocupado mientras se carga una caja      
-                    or (isinstance(agent, ChargingStation) and agent.is_apartada)     
+                    or (self.is_lifting_box and isinstance(agent, Shelf) and agent.is_occupied) # No se puede pasar por un estante ocupado mientras se carga una caja           
                     or (isinstance(agent, ConveyorBelt))): #
                 blocked_positions.add(agent.pos)
 
         neighbor_positions = self.model.grid.get_neighborhood(
             self.pos, moore=True, include_center=False)
+        
+        restricted_positions = set()
+        # Movement restrictions to force entry direction ------------------------
+        for pos in neighbor_positions:
+            position_difference = (pos[0] - self.pos[0], pos[1] - self.pos[1])
+            agents_in_neighbor_pos = self.model.grid.get_cell_list_contents([pos])
 
-        # Quitar todos los agentes de las posiciones bloqueadas
-        allowed_positions = [pos for pos in neighbor_positions if pos not in blocked_positions]
+            for agent in agents_in_neighbor_pos:
+                if not hasattr(agent, 'not_allowed_movement_positions') or \
+                   agent.not_allowed_movement_positions is None:
+                    continue
+
+                if position_difference in agent.not_allowed_movement_positions:
+                    restricted_positions.add(pos)
+                    break
+                 
+        # Movement restrictions to force exit direction --------------------------
+        agents_in_pos = self.model.grid.get_cell_list_contents([self.pos])
+        for agent in agents_in_pos:
+            if not hasattr(agent, 'not_allowed_movement_positions') or \
+                agent.not_allowed_movement_positions is None:
+                continue
+            for not_allowed_pos in agent.not_allowed_movement_positions:
+                pos = (self.pos[0] + not_allowed_pos[0], self.pos[1] + not_allowed_pos[1])
+                restricted_positions.add(pos)
+
+        allowed_positions = [pos for pos in neighbor_positions if pos not in blocked_positions and pos not in restricted_positions]
         return allowed_positions
+
 
     def move_to_target_position(self):
         allowed_positions = self.get_valid_neighbors()
+        print("Number of allowed positions: ", len(allowed_positions))
+        print("allowed positions: ", allowed_positions)
 
         if len(allowed_positions) == 0:
             self.dont_move()
